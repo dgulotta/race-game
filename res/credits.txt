@@ -1,0 +1,13 @@
+# Game design and programming
+Dan Gulotta
+
+# Playtesting
+Don Gulotta
+Pat Gulotta
+Latoya van der Meer
+
+Made with Notan,
+https://github.com/Nazariglez/notan
+
+Graphics based on Kenney Racing Pack,
+https://www.kenney.nl/assets/racing-pack
