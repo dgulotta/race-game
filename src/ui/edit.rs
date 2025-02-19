@@ -77,7 +77,7 @@ struct TooltipArea {
     pub selection: TileType,
 }
 
-static BUTTON_SIZE: f32 = 64.0;
+static BUTTON_SIZE: f32 = 65.0;
 
 struct PanelManager<'a> {
     res: &'a Resources,
