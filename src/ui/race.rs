@@ -148,6 +148,7 @@ pub fn draw_goal_panel(
 ) {
     egui::SidePanel::left("Goal").show(ctx, |ui| {
         egui::ScrollArea::vertical().show(ui, |ui| {
+            ui.heading(&level.name);
             ui.heading("Finish order");
             ui.columns(2, |col| {
                 col[0].label("Goal");
