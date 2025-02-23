@@ -97,6 +97,7 @@ pub struct EditState {
     pub view_center: Vec2,
     pub show_keys: bool,
     pub copy_dialog_data: Option<Vec<bool>>,
+    pub click_in_gui: bool,
 }
 
 impl EditState {
@@ -117,6 +118,7 @@ impl EditState {
             view_center,
             show_keys: false,
             copy_dialog_data: None,
+            click_in_gui: false,
         }
     }
 

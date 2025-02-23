@@ -44,30 +44,35 @@ fn process_keyboard(app: &App, settings: &Settings, state: &mut EditState) -> Op
     command
 }
 
-fn process_mouse(app: &App, state: &mut EditState, offset: &Vec2) {
+fn process_mouse(app: &App, state: &mut EditState, offset: &Vec2, in_gui: bool) {
     let pos = mouse_coords(app, offset);
-    if app.mouse.left_is_down() {
-        match &mut state.track_selection {
-            TrackSelection::Erase => {
-                state.remove_tile(pos);
-            }
-            TrackSelection::Draw(tile) => {
-                state.course.set_single(pos, *tile);
-            }
-            TrackSelection::Modify(select) => {
-                if app.mouse.left_was_pressed() {
-                    let retain = app.keyboard.is_down(KeyCode::LShift)
-                        || app.keyboard.is_down(KeyCode::RShift);
-                    select.click(pos, retain);
+    if app.mouse.left_was_pressed() {
+        state.click_in_gui = in_gui;
+    }
+    if !state.click_in_gui {
+        if app.mouse.left_is_down() && !in_gui {
+            match &mut state.track_selection {
+                TrackSelection::Erase => {
+                    state.remove_tile(pos);
+                }
+                TrackSelection::Draw(tile) => {
+                    state.course.set_single(pos, *tile);
+                }
+                TrackSelection::Modify(select) => {
+                    if app.mouse.left_was_pressed() {
+                        let retain = app.keyboard.is_down(KeyCode::LShift)
+                            || app.keyboard.is_down(KeyCode::RShift);
+                        select.click(pos, retain);
+                    }
                 }
             }
-        }
-    } else if app.mouse.left_was_released() {
-        if let TrackSelection::Modify(select) = &mut state.track_selection {
-            select.release(&mut state.course, pos);
+        } else if app.mouse.left_was_released() {
+            if let TrackSelection::Modify(select) = &mut state.track_selection {
+                select.release(&mut state.course, pos);
+            }
         }
     }
-    if app.mouse.right_is_down() {
+    if app.mouse.right_is_down() && !in_gui {
         state.remove_tile(pos);
     }
 }
@@ -377,9 +382,7 @@ pub fn draw_edit(
         mouse_in_gui = ctx.is_pointer_over_area();
     });
     let offset = get_draw_offset(&state.view_center, &draw_rect);
-    if !mouse_in_gui {
-        process_mouse(app, state, &offset);
-    }
+    process_mouse(app, state, &offset, mouse_in_gui);
     let draw = draw_course_edit(app, gfx, res, state, mouse_in_gui, &offset);
 
     gfx.render(&draw);
