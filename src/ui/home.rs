@@ -1,3 +1,4 @@
+use super::gui::central_panel;
 use super::loader::Resources;
 use crate::states::{SelectState, SelectStatus};
 use notan::app::{App, Color, Graphics, Plugins};
@@ -12,7 +13,8 @@ pub fn draw_home_screen(
 ) -> SelectStatus {
     let mut selection = SelectStatus::Idle;
     let mut output = plugins.egui(|ctx| {
-        egui::Window::new("Select a level").show(ctx, |ui| {
+        central_panel(ctx, egui::Align::Min, |ui| {
+            ui.heading("Select a level");
             egui::Grid::new("Select grid").show(ui, |ui| {
                 ui.heading("Level");
                 ui.heading("Area");

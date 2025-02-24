@@ -6,6 +6,7 @@ license = "GPL-3.0-only AND CC-BY-SA-4.0"
 
 [dependencies]
 notan = { git = "https://github.com/dgulotta/notan.git", features = ["egui","extra","serde"], branch = "zoom" }
+#notan = { path = "../../sources/notan", features = ["egui","extra","serde"] }
 serde = { version = "1.0.214", features = ["rc"] }
 toml = "0.8.19"
 strum = { version ="0.26.3", features = ["derive"] }
@@ -20,6 +21,7 @@ egui-file-dialog = "0.9"
 png = "0.17.16"
 anyhow = "1.0.95"
 indexmap = { version = "2.7.1", features = ["serde"] }
+serde_default = "0.2.0"
 
 [target.'cfg(not(target_arch = "wasm32"))'.dependencies]
 bevy_pkv = { version = "0.11.1", default-features=false, features=["redb"] }

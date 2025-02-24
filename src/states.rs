@@ -17,6 +17,7 @@ use crate::{
     ui::{
         export::{make_exporter, FileExport},
         screen::Screen,
+        settings::ZoomSettings,
     },
 };
 
@@ -425,13 +426,24 @@ impl CustomSpecState {
     }
 }
 
+pub enum SettingsMenu {
+    Main,
+    Display(ZoomSettings),
+    Keys,
+    Help,
+    ChooseKey(Action),
+}
+
 pub struct SettingsState {
     pub last: Box<dyn Screen>,
-    pub action: Option<Action>,
+    pub menu: SettingsMenu,
 }
 
 impl SettingsState {
     pub fn new(last: Box<dyn Screen>) -> Self {
-        Self { last, action: None }
+        Self {
+            last,
+            menu: SettingsMenu::Main,
+        }
     }
 }

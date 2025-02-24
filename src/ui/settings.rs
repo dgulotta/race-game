@@ -3,6 +3,7 @@ use crate::{direction::Direction, input::Action, tile::TileType};
 use indexmap::IndexMap;
 use notan::prelude::KeyCode;
 use serde::{Deserialize, Deserializer, Serialize};
+use serde_default::DefaultFromSerde;
 
 type KeySettings = IndexMap<Action, KeyCode, hashbrown::DefaultHashBuilder>;
 
@@ -61,20 +62,40 @@ fn deserialize_keys<'de, D: Deserializer<'de>>(deserializer: D) -> Result<KeySet
     Ok(settings)
 }
 
-#[derive(Serialize, Deserialize)]
-pub struct Settings {
-    #[serde(deserialize_with = "deserialize_keys")]
-    pub keys: KeySettings,
-    pub animate_tooltips: bool,
-    pub tutorial: bool,
+const fn default_height() -> f32 {
+    576.0
+}
+const fn default_width() -> f32 {
+    1024.0
+}
+const fn one() -> f32 {
+    1.0
+}
+const fn true_fn() -> bool {
+    true
 }
 
-impl Default for Settings {
-    fn default() -> Self {
-        Self {
-            keys: default_key_settings(),
-            animate_tooltips: true,
-            tutorial: true,
-        }
-    }
+#[derive(Clone, Serialize, Deserialize, DefaultFromSerde)]
+pub struct ZoomSettings {
+    #[serde(default = "one")]
+    pub tile_size: f32,
+    #[serde(default = "one")]
+    pub font_size: f32,
+}
+
+#[derive(Clone, Serialize, Deserialize, DefaultFromSerde)]
+pub struct Settings {
+    #[serde(
+        default = "default_key_settings",
+        deserialize_with = "deserialize_keys"
+    )]
+    pub keys: KeySettings,
+    #[serde(default = "true_fn")]
+    pub animate_tooltips: bool,
+    #[serde(default = "true_fn")]
+    pub tutorial: bool,
+    #[serde(default)]
+    pub fullscreen: bool,
+    #[serde(default)]
+    pub zoom: ZoomSettings,
 }

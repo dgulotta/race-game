@@ -1,10 +1,11 @@
 use notan::draw::DrawConfig;
-use notan::egui::EguiConfig;
+use notan::egui::{EguiConfig, EguiPluginSugar};
 use notan::extra::FpsLimit;
 use notan::prelude::*;
 use race_game_rust::save::load_or_log_err;
 use race_game_rust::states::SelectState;
 use race_game_rust::ui::loader::Resources;
+use race_game_rust::ui::menu::apply_zoom_settings;
 use race_game_rust::ui::screen::Screen;
 use race_game_rust::ui::settings::Settings;
 use takeable::Takeable;
@@ -37,7 +38,6 @@ fn main() -> Result<(), String> {
 
 fn adjust_font_sizes(gfx: &mut Graphics, plugins: &mut Plugins) {
     let factor = 1.3;
-    use notan::egui::EguiPluginSugar;
     let output = plugins.egui(|ctx| {
         ctx.style_mut(|style| {
             for (_, v) in style.text_styles.iter_mut() {
@@ -55,6 +55,8 @@ fn init(gfx: &mut Graphics, plugins: &mut Plugins) -> GameData {
     let state: Box<dyn Screen> = Box::new(SelectState::new(&resources.levels));
     let settings: Settings =
         load_or_log_err("settings", "failed to load settings").unwrap_or_default();
+    let output = plugins.egui(|ctx| apply_zoom_settings(&settings, ctx));
+    gfx.render(&output);
     GameData {
         resources,
         state: Takeable::new(state),
@@ -63,6 +65,10 @@ fn init(gfx: &mut Graphics, plugins: &mut Plugins) -> GameData {
 }
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, data: &mut GameData) {
+    if cfg!(target_arch = "wasm32") {
+        let sz = app.window().container_size();
+        app.window().set_size(sz.0 as u32, sz.1 as u32);
+    }
     data.state
         .borrow(|st| st.run(app, gfx, plugins, &data.resources, &mut data.settings));
 }

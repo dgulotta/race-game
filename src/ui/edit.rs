@@ -119,12 +119,12 @@ impl PanelManager<'_> {
             Action::SelectTile(t) if self.settings.animate_tooltips => {
                 response.on_hover_ui(|ui| {
                     let tool_resp = ui.allocate_response(
-                        egui::Vec2::new(3.0 * TILE_SIZE, 3.0 * TILE_SIZE),
+                        egui::Vec2::new(3.0 * TILE_SIZE, 3.0 * TILE_SIZE) / ui.ctx().zoom_factor(),
                         Sense::hover(),
                     );
                     ui.label(label);
                     self.tooltip = Some(TooltipArea {
-                        area: tool_resp.rect,
+                        area: tool_resp.rect * ui.ctx().zoom_factor(),
                         selection: t,
                     });
                 });

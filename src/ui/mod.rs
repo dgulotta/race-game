@@ -2,6 +2,7 @@ pub mod credits;
 pub mod edit;
 pub mod export;
 pub mod graphics;
+pub mod gui;
 pub mod home;
 pub mod input;
 pub mod loader;

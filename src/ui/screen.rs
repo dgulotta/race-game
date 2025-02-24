@@ -67,7 +67,8 @@ impl Screen for SettingsState {
         _res: &Resources,
         settings: &mut Settings,
     ) -> Box<dyn Screen> {
-        if settings_menu(app, gfx, plugins, settings, &mut self.action) {
+        let finished = settings_menu(app, gfx, plugins, settings, &mut self);
+        if finished {
             self.last
         } else {
             self
