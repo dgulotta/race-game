@@ -230,15 +230,11 @@ fn make_animation(
             draw: texture.create_draw(),
             round,
         };
-        //let mut draw = texture.create_draw();
         graphics.draw.transform().push(aff.into());
-        graphics.draw_course(&course);
-        //draw_course(&mut graphics.draw, res, course, round);
+        graphics.draw_course(course);
         for car in &state.tracker.get_cars()[round] {
-            graphics.draw_car(&car);
-            //draw_car(&mut graphics.draw, res, car);
-            graphics.draw_car_number(&car);
-            //draw_car_number(&mut graphics.draw, res, car);
+            graphics.draw_car(car);
+            graphics.draw_car_number(car);
         }
         gfx.render_to(&texture, &graphics.draw);
         gfx.read_pixels(&texture).read_to(&mut pix).map_err(anh)?;

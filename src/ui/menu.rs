@@ -1,19 +1,23 @@
 use notan::{
     app::{App, Color, Graphics, Plugins},
-    egui::{self, Context, EguiPluginSugar, Grid, RichText, Ui},
+    egui::{self, Context, EguiPluginSugar, Grid, Rect, RichText, Ui},
 };
 
 use super::{
-    graphics::TILE_SIZE,
+    graphics::{allocate_ui_space, create_draw_masked, TileGraphics, TILE_SIZE},
     gui::central_panel,
     input::key_name,
+    loader::Resources,
     settings::{Settings, ZoomSettings},
 };
 use crate::{
+    course::TileCoord,
+    direction::DihedralElement,
     input::Action,
     level::LevelData,
     save::save_or_log_err,
     states::{CustomSpecState, DialogResponse, SettingsMenu, SettingsState},
+    tile::{Tile, TileType},
 };
 
 pub fn apply_zoom_settings(settings: &Settings, ctx: &Context) {
@@ -25,7 +29,7 @@ fn display_settings(
     settings: &mut Settings,
     temp_zoom: &mut ZoomSettings,
     ui: &mut Ui,
-) {
+) -> Rect {
     ui.add(
         egui::Slider::new(&mut temp_zoom.tile_size, 0.5..=8.0)
             .text("Tile size")
@@ -40,21 +44,89 @@ fn display_settings(
         settings.zoom = temp_zoom.clone();
         apply_zoom_settings(settings, ui.ctx());
     }
+    let rect = allocate_ui_space(ui, settings.zoom.tile_size, 3, 2);
     if cfg!(not(target_arch = "wasm32")) {
         ui.checkbox(&mut settings.fullscreen, "Fullscreen");
         app.window().set_fullscreen(settings.fullscreen);
     }
+    rect
+}
+
+const SAMPLE_TRACK: &[(Tile, TileCoord)] = &[
+    (
+        Tile {
+            tile_type: TileType::Turn,
+            transform: DihedralElement::Flip0,
+            offset: 0,
+        },
+        TileCoord(0, 0),
+    ),
+    (
+        Tile {
+            tile_type: TileType::Finish,
+            transform: DihedralElement::Flip45,
+            offset: 0,
+        },
+        TileCoord(1, 0),
+    ),
+    (
+        Tile {
+            tile_type: TileType::Turn,
+            transform: DihedralElement::Flip45,
+            offset: 0,
+        },
+        TileCoord(2, 0),
+    ),
+    (
+        Tile {
+            tile_type: TileType::Turn,
+            transform: DihedralElement::Flip135,
+            offset: 0,
+        },
+        TileCoord(0, 1),
+    ),
+    (
+        Tile {
+            tile_type: TileType::Straight,
+            transform: DihedralElement::Flip135,
+            offset: 0,
+        },
+        TileCoord(1, 1),
+    ),
+    (
+        Tile {
+            tile_type: TileType::Turn,
+            transform: DihedralElement::Flip90,
+            offset: 0,
+        },
+        TileCoord(2, 1),
+    ),
+];
+
+fn draw_sample_track(gfx: &mut Graphics, res: &Resources, settings: &Settings, rect: &Rect) {
+    let mut graphics = TileGraphics {
+        res,
+        zoom: settings.zoom.tile_size,
+        draw: create_draw_masked(gfx, rect),
+        round: 1,
+    };
+    for &(tile, pos) in SAMPLE_TRACK.iter() {
+        graphics.draw_tile(tile, pos);
+    }
+    gfx.render(&graphics.draw);
 }
 
 pub fn settings_menu(
     app: &mut App,
     gfx: &mut Graphics,
     plugins: &mut Plugins,
+    res: &Resources,
     settings: &mut Settings,
     state: &mut SettingsState,
 ) -> bool {
     let mut exit = false;
     let mut back = false;
+    let mut track_rect = None;
     let mut output = plugins.egui(|ctx| match &mut state.menu {
         SettingsMenu::Main => {
             exit = settings_menu_main(settings, state, ctx);
@@ -64,7 +136,9 @@ pub fn settings_menu(
             back = settings_menu_choose_key(app, settings, ctx, a);
         }
         SettingsMenu::Display(window) => {
-            back = settings_menu_display(app, settings, window, ctx);
+            let (b, r) = settings_menu_display(app, settings, window, ctx);
+            back = b;
+            track_rect = Some(r);
         }
         SettingsMenu::Help => settings_menu_help(settings, state, ctx),
     });
@@ -73,6 +147,9 @@ pub fn settings_menu(
     }
     output.clear_color(Color::BLACK);
     gfx.render(&output);
+    if let Some(r) = track_rect {
+        draw_sample_track(gfx, res, settings, &r);
+    }
     if exit {
         save_or_log_err("settings", settings, "failed to save settings");
     }
@@ -106,13 +183,14 @@ pub fn settings_menu_display(
     settings: &mut Settings,
     temp_window: &mut ZoomSettings,
     ctx: &Context,
-) -> bool {
+) -> (bool, Rect) {
     central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Display settings");
         ui.add_space(20.0);
-        display_settings(app, settings, temp_window, ui);
+        let rect = display_settings(app, settings, temp_window, ui);
         ui.add_space(20.0);
-        ui.button(RichText::new("Back").heading()).clicked()
+        let back = ui.button(RichText::new("Back").heading()).clicked();
+        (back, rect)
     })
 }
 

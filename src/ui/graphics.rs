@@ -1,7 +1,7 @@
 use notan::draw::{
-    Draw, DrawBuilder, DrawImages, DrawShapes, DrawTextSection, DrawTransform, Image,
+    CreateDraw, Draw, DrawBuilder, DrawImages, DrawShapes, DrawTextSection, DrawTransform, Image,
 };
-use notan::egui::Rect;
+use notan::egui::{self, Rect, Ui};
 use notan::math::{Affine2, Mat2, Mat3, Vec2};
 use notan::prelude::*;
 
@@ -152,4 +152,23 @@ pub fn get_draw_offset(center: &Vec2, rect: &Rect) -> Vec2 {
     let pix_center = TILE_SIZE * (*center + Vec2::new(0.5, 0.5));
     let rect_center = rect.center();
     Vec2::new(rect_center.x, rect_center.y) - pix_center
+}
+
+pub fn allocate_ui_space(ui: &mut Ui, zoom: f32, width: u32, height: u32) -> Rect {
+    let factor = TILE_SIZE * zoom / ui.ctx().zoom_factor();
+    let w = (width as f32) * factor;
+    let h = (height as f32) * factor;
+    let resp = ui.allocate_response(egui::Vec2::new(w, h), egui::Sense::hover());
+    resp.rect * ui.ctx().zoom_factor()
+}
+
+pub fn create_draw_masked(gfx: &mut Graphics, rect: &Rect) -> Draw {
+    let mut mask = gfx.create_draw();
+    mask.rect((rect.min.x, rect.min.y), (rect.width(), rect.height()));
+    let mut draw = gfx.create_draw();
+    draw.transform()
+        .push(Mat3::from_translation(Vec2::new(rect.min.x, rect.min.y)));
+    draw.mask(Some(&mask));
+    draw.rect((0.0, 0.0), (rect.width(), rect.height()));
+    draw
 }

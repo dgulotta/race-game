@@ -2,8 +2,8 @@ use std::rc::Rc;
 
 use notan::{
     app::{App, Graphics, Plugins},
-    draw::{CreateDraw, DrawShapes},
-    egui::{self, Context, EguiPluginSugar, Rect, Sense, Ui},
+    draw::CreateDraw,
+    egui::{self, Context, EguiPluginSugar, Rect, Ui},
     math::Vec2,
     prelude::KeyCode,
 };
@@ -21,7 +21,7 @@ use crate::{
 };
 
 use super::{
-    graphics::{get_draw_offset, TileGraphics, TILE_SIZE},
+    graphics::{allocate_ui_space, create_draw_masked, get_draw_offset, TileGraphics, TILE_SIZE},
     input::{check_key_press, key_name, mouse_coords},
     loader::{GuiImage, Resources},
     race::{draw_goal_panel, draw_playback_panel, PlaybackPanelState},
@@ -121,14 +121,10 @@ impl PanelManager<'_> {
         match action {
             Action::SelectTile(t) if self.settings.animate_tooltips => {
                 response.on_hover_ui(|ui| {
-                    let sz = 3.0 * self.settings.tile_size();
-                    let tool_resp = ui.allocate_response(
-                        egui::Vec2::new(sz, sz) / ui.ctx().zoom_factor(),
-                        Sense::hover(),
-                    );
+                    let rect = allocate_ui_space(ui, self.settings.zoom.tile_size, 3, 3);
                     ui.label(label);
                     self.tooltip = Some(TooltipArea {
-                        area: tool_resp.rect * ui.ctx().zoom_factor(),
+                        area: rect,
                         selection: t,
                     });
                 });
@@ -399,11 +395,6 @@ pub fn draw_edit(
     gfx.render(&output);
 
     if let Some(tool_area) = tooltip {
-        let mut mask = gfx.create_draw();
-        mask.rect(
-            (tool_area.area.min.x, tool_area.area.min.y),
-            (tool_area.area.width(), tool_area.area.height()),
-        );
         if state.tooltip.as_ref().map(|t| t.tile) != Some(tool_area.selection) {
             state.tooltip = Some(TooltipState::new(tool_area.selection));
         }
@@ -411,15 +402,9 @@ pub fn draw_edit(
         let mut graphics = TileGraphics {
             res,
             zoom: settings.zoom.tile_size,
-            draw: gfx.create_draw(),
+            draw: create_draw_masked(gfx, &tool_area.area),
             round: tool_state.sim.get_round(),
         };
-        graphics.set_offset(&Vec2::new(tool_area.area.min.x, tool_area.area.min.y));
-        graphics.draw.mask(Some(&mask));
-        graphics.draw.rect(
-            (0.0, 0.0),
-            (tool_area.area.width(), tool_area.area.height()),
-        );
         for (pos, tile) in tool_state.sim.get_course().iter() {
             if (0..=2).contains(&pos.0) && (0..=2).contains(&pos.1) {
                 graphics.draw_tile(*tile, *pos);
