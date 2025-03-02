@@ -5,6 +5,8 @@ use notan::prelude::KeyCode;
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_default::DefaultFromSerde;
 
+use super::graphics::TILE_SIZE;
+
 type KeySettings = IndexMap<Action, KeyCode, hashbrown::DefaultHashBuilder>;
 
 pub fn default_key_settings() -> KeySettings {
@@ -98,4 +100,10 @@ pub struct Settings {
     pub fullscreen: bool,
     #[serde(default)]
     pub zoom: ZoomSettings,
+}
+
+impl Settings {
+    pub fn tile_size(&self) -> f32 {
+        TILE_SIZE * self.zoom.tile_size
+    }
 }

@@ -19,7 +19,7 @@ use strum::IntoEnumIterator;
 
 use super::{
     edit::key_window,
-    graphics::{draw_car, draw_car_number, draw_course, get_draw_offset, set_offset, TILE_SIZE},
+    graphics::{get_draw_offset, TileGraphics, TILE_SIZE},
     input::check_key_press,
     loader::Resources,
     settings::Settings,
@@ -185,8 +185,8 @@ pub fn draw_goal_panel(
     });
 }
 
-fn gfx_size_for(tiles: isize) -> u32 {
-    ((tiles as f32) * TILE_SIZE).round() as u32
+fn gfx_size_for(tiles: isize, zoom: f32) -> u32 {
+    ((tiles as f32) * TILE_SIZE * zoom).round() as u32
 }
 
 fn anh(s: String) -> anyhow::Error {
@@ -197,12 +197,14 @@ fn make_animation(
     gfx: &mut Graphics,
     res: &Resources,
     state: &RaceState,
+    zoom: f32,
 ) -> Result<Vec<u8>, anyhow::Error> {
     let mut out = Cursor::new(Vec::new());
     let course = state.sim.get_course();
     let (xrange, yrange) = bounding_rect(course.keys());
-    let width = gfx_size_for(xrange.end() - xrange.start() + 1);
-    let height = gfx_size_for(yrange.end() - yrange.start() + 1);
+    let tile_size_zoom = TILE_SIZE * zoom;
+    let width = gfx_size_for(xrange.end() - xrange.start() + 1, zoom);
+    let height = gfx_size_for(yrange.end() - yrange.start() + 1, zoom);
     let texture = gfx
         .create_render_texture(width, height)
         .build()
@@ -215,21 +217,30 @@ fn make_animation(
         .unwrap();
     let mut writer = encoder.write_header().unwrap();
     writer.set_frame_delay(1, 2).unwrap();
-    let xoff = (*xrange.start() as f32) * TILE_SIZE;
-    let yoff = ((*yrange.end() + 1) as f32) * TILE_SIZE;
+    let xoff = (*xrange.start() as f32) * tile_size_zoom;
+    let yoff = ((*yrange.end() + 1) as f32) * tile_size_zoom;
     let aff = Affine2::from_mat2_translation(
         Mat2::from_diagonal(Vec2::new(1.0, -1.0)),
         Vec2::new(-xoff, yoff),
     );
     for round in 0..state.tracker.rounds_available() {
-        let mut draw = texture.create_draw();
-        draw.transform().push(aff.into());
-        draw_course(&mut draw, res, course, round);
+        let mut graphics = TileGraphics {
+            res,
+            zoom,
+            draw: texture.create_draw(),
+            round,
+        };
+        //let mut draw = texture.create_draw();
+        graphics.draw.transform().push(aff.into());
+        graphics.draw_course(&course);
+        //draw_course(&mut graphics.draw, res, course, round);
         for car in &state.tracker.get_cars()[round] {
-            draw_car(&mut draw, res, car);
-            draw_car_number(&mut draw, res, car);
+            graphics.draw_car(&car);
+            //draw_car(&mut graphics.draw, res, car);
+            graphics.draw_car_number(&car);
+            //draw_car_number(&mut graphics.draw, res, car);
         }
-        gfx.render_to(&texture, &draw);
+        gfx.render_to(&texture, &graphics.draw);
         gfx.read_pixels(&texture).read_to(&mut pix).map_err(anh)?;
         writer.write_image_data(&pix).unwrap();
     }
@@ -238,8 +249,10 @@ fn make_animation(
 }
 
 pub fn show_success(
+    app: &mut App,
     gfx: &mut Graphics,
     res: &Resources,
+    settings: &Settings,
     state: &mut RaceState,
     ctx: &Context,
 ) -> Option<Action> {
@@ -260,7 +273,8 @@ pub fn show_success(
                     state.status = RaceEndStatus::Finished;
                 }
                 if ui.button("Save replay").clicked() {
-                    if let Ok(bytes) = make_animation(gfx, res, state) {
+                    let zoom = (app.window().dpi() as f32) * settings.zoom.tile_size;
+                    if let Ok(bytes) = make_animation(gfx, res, state, zoom) {
                         let _ = state.exporter.set_save_action(
                             Box::new(move |w| {
                                 w.write_all(&bytes)?;
@@ -331,7 +345,7 @@ pub fn draw_race(
         );
         command = draw_playback_panel(pps, settings, ctx);
         if state.status == RaceEndStatus::ShowingPopup {
-            command = command.or(show_success(gfx, res, state, ctx));
+            command = command.or(show_success(app, gfx, res, settings, state, ctx));
         }
         draw_rect = ctx.available_rect();
         if state.show_keys {
@@ -343,15 +357,20 @@ pub fn draw_race(
         state.process_command(cmd, time);
     }
     state.check_advance(time);
-    let mut draw = gfx.create_draw();
+    let mut graphics = TileGraphics {
+        res,
+        zoom: settings.zoom.tile_size,
+        draw: gfx.create_draw(),
+        round: state.round,
+    };
     let offset = get_draw_offset(&state.view_center, &draw_rect);
-    set_offset(&mut draw, &offset);
-    draw_course(&mut draw, res, state.sim.get_course(), state.round);
+    graphics.set_offset(&offset);
+    graphics.draw_course(state.sim.get_course());
     for car in state.get_cars() {
-        draw_car(&mut draw, res, car);
-        draw_car_number(&mut draw, res, car);
+        graphics.draw_car(car);
+        graphics.draw_car_number(car);
     }
-    gfx.render(&draw);
+    gfx.render(&graphics.draw);
     gfx.render(&output);
     command
 }

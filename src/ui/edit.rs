@@ -4,7 +4,7 @@ use notan::{
     app::{App, Graphics, Plugins},
     draw::{CreateDraw, DrawShapes},
     egui::{self, Context, EguiPluginSugar, Rect, Sense, Ui},
-    math::{Mat3, Vec2},
+    math::Vec2,
     prelude::KeyCode,
 };
 use strum::IntoEnumIterator;
@@ -21,10 +21,7 @@ use crate::{
 };
 
 use super::{
-    graphics::{
-        draw_car, draw_course, draw_highlights, draw_tile, draw_tile_sprite, get_draw_offset,
-        set_offset, TILE_SIZE,
-    },
+    graphics::{get_draw_offset, TileGraphics, TILE_SIZE},
     input::{check_key_press, key_name, mouse_coords},
     loader::{GuiImage, Resources},
     race::{draw_goal_panel, draw_playback_panel, PlaybackPanelState},
@@ -44,8 +41,14 @@ fn process_keyboard(app: &App, settings: &Settings, state: &mut EditState) -> Op
     command
 }
 
-fn process_mouse(app: &App, state: &mut EditState, offset: &Vec2, in_gui: bool) {
-    let pos = mouse_coords(app, offset);
+fn process_mouse(
+    app: &App,
+    settings: &Settings,
+    state: &mut EditState,
+    offset: &Vec2,
+    in_gui: bool,
+) {
+    let pos = mouse_coords(app, settings, offset);
     if app.mouse.left_was_pressed() {
         state.click_in_gui = in_gui;
     }
@@ -118,8 +121,9 @@ impl PanelManager<'_> {
         match action {
             Action::SelectTile(t) if self.settings.animate_tooltips => {
                 response.on_hover_ui(|ui| {
+                    let sz = 3.0 * self.settings.tile_size();
                     let tool_resp = ui.allocate_response(
-                        egui::Vec2::new(3.0 * TILE_SIZE, 3.0 * TILE_SIZE) / ui.ctx().zoom_factor(),
+                        egui::Vec2::new(sz, sz) / ui.ctx().zoom_factor(),
                         Sense::hover(),
                     );
                     ui.label(label);
@@ -175,18 +179,23 @@ fn draw_course_edit(
     app: &App,
     gfx: &Graphics,
     res: &Resources,
+    settings: &Settings,
     state: &EditState,
     mouse_in_gui: bool,
     offset: &Vec2,
 ) -> notan::draw::Draw {
-    let mut draw = gfx.create_draw();
-    set_offset(&mut draw, offset);
+    let mut graphics = TileGraphics {
+        res,
+        zoom: settings.zoom.tile_size,
+        draw: gfx.create_draw(),
+        round: 1,
+    };
+    graphics.set_offset(offset);
     if let TrackSelection::Modify(selection) = &state.track_selection {
-        draw_highlights(&mut draw, &selection.selection);
+        graphics.draw_highlights(&selection.selection);
         if let DragState::Selecting(anchor) = &selection.drag {
-            let (xrange, yrange) = selection_rect(*anchor, mouse_coords(app, offset));
-            draw_highlights(
-                &mut draw,
+            let (xrange, yrange) = selection_rect(*anchor, mouse_coords(app, settings, offset));
+            graphics.draw_highlights(
                 state
                     .course
                     .get_course()
@@ -195,15 +204,16 @@ fn draw_course_edit(
             );
         }
     }
-    draw_course(&mut draw, res, state.course.get_course(), 1);
+    graphics.draw_course(state.course.get_course());
     if !mouse_in_gui {
-        let pos = mouse_coords(app, offset);
+        let pos = mouse_coords(app, settings, offset);
         match &state.track_selection {
             TrackSelection::Draw(tile) => {
-                draw_tile(&mut draw, *tile, res, pos, 1).alpha(OVERLAY_ALPHA);
+                graphics.draw_tile(*tile, pos).alpha(OVERLAY_ALPHA);
             }
             TrackSelection::Erase => {
-                draw_tile_sprite(&mut draw, &res.erase, DihedralElement::Id, pos)
+                graphics
+                    .draw_tile_sprite(&res.erase, DihedralElement::Id, pos)
                     .alpha(OVERLAY_ALPHA);
             }
             TrackSelection::Modify(selection) => {
@@ -211,13 +221,13 @@ fn draw_course_edit(
                     for (new_pos, tile) in
                         drag_tiles(&selection.selection, drag, state.course.get_course(), pos)
                     {
-                        draw_tile(&mut draw, tile, res, new_pos, 1).alpha(OVERLAY_ALPHA);
+                        graphics.draw_tile(tile, new_pos).alpha(OVERLAY_ALPHA);
                     }
                 }
             }
         }
     }
-    draw
+    graphics.draw
 }
 
 fn tutorial_text(ctx: &Context, text: &str) {
@@ -382,8 +392,8 @@ pub fn draw_edit(
         mouse_in_gui = ctx.is_pointer_over_area();
     });
     let offset = get_draw_offset(&state.view_center, &draw_rect);
-    process_mouse(app, state, &offset, mouse_in_gui);
-    let draw = draw_course_edit(app, gfx, res, state, mouse_in_gui, &offset);
+    process_mouse(app, settings, state, &offset, mouse_in_gui);
+    let draw = draw_course_edit(app, gfx, res, settings, state, mouse_in_gui, &offset);
 
     gfx.render(&draw);
     gfx.render(&output);
@@ -394,23 +404,25 @@ pub fn draw_edit(
             (tool_area.area.min.x, tool_area.area.min.y),
             (tool_area.area.width(), tool_area.area.height()),
         );
-        let mut tool_draw = gfx.create_draw();
         if state.tooltip.as_ref().map(|t| t.tile) != Some(tool_area.selection) {
             state.tooltip = Some(TooltipState::new(tool_area.selection));
         }
         let tool_state = state.tooltip.as_mut().unwrap();
-        tool_draw.transform().push(Mat3::from_translation(Vec2::new(
-            tool_area.area.min.x,
-            tool_area.area.min.y,
-        )));
-        tool_draw.mask(Some(&mask));
-        tool_draw.rect(
+        let mut graphics = TileGraphics {
+            res,
+            zoom: settings.zoom.tile_size,
+            draw: gfx.create_draw(),
+            round: tool_state.sim.get_round(),
+        };
+        graphics.set_offset(&Vec2::new(tool_area.area.min.x, tool_area.area.min.y));
+        graphics.draw.mask(Some(&mask));
+        graphics.draw.rect(
             (0.0, 0.0),
             (tool_area.area.width(), tool_area.area.height()),
         );
         for (pos, tile) in tool_state.sim.get_course().iter() {
             if (0..=2).contains(&pos.0) && (0..=2).contains(&pos.1) {
-                draw_tile(&mut tool_draw, *tile, res, *pos, tool_state.sim.get_round());
+                graphics.draw_tile(*tile, *pos);
             }
         }
         let time = app.timer.elapsed();
@@ -418,9 +430,9 @@ pub fn draw_edit(
             tool_state.advance(time);
         }
         for car in &tool_state.cars {
-            draw_car(&mut tool_draw, res, car);
+            graphics.draw_car(car);
         }
-        gfx.render(&tool_draw);
+        gfx.render(&graphics.draw);
     }
     play_command
 }

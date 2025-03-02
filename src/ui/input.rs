@@ -1,14 +1,15 @@
 use crate::{course::TileCoord, input::Action};
 
-use super::{graphics::TILE_SIZE, settings::Settings};
+use super::settings::Settings;
 use notan::{
     math::Vec2,
     prelude::{App, KeyCode},
 };
 
-pub fn mouse_coords(app: &App, offset: &Vec2) -> TileCoord {
-    let x = ((app.mouse.x - offset.x) / TILE_SIZE).floor() as isize;
-    let y = ((app.mouse.y - offset.y) / TILE_SIZE).floor() as isize;
+pub fn mouse_coords(app: &App, settings: &Settings, offset: &Vec2) -> TileCoord {
+    let tsz = settings.tile_size();
+    let x = ((app.mouse.x - offset.x) / tsz).floor() as isize;
+    let y = ((app.mouse.y - offset.y) / tsz).floor() as isize;
     TileCoord(x, y)
 }
 
