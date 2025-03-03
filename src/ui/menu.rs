@@ -46,8 +46,9 @@ fn display_settings(
     }
     let rect = allocate_ui_space(ui, settings.zoom.tile_size, 3, 2);
     if cfg!(not(target_arch = "wasm32")) {
-        ui.checkbox(&mut settings.fullscreen, "Fullscreen");
-        app.window().set_fullscreen(settings.fullscreen);
+        let mut full = app.window().is_fullscreen();
+        ui.checkbox(&mut full, "Fullscreen");
+        app.window().set_fullscreen(full);
     }
     rect
 }

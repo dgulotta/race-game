@@ -5,7 +5,7 @@ use notan::app::{App, Color, Graphics, Plugins};
 use notan::egui::{self, EguiPluginSugar};
 
 pub fn draw_home_screen(
-    _app: &mut App,
+    app: &mut App,
     gfx: &mut Graphics,
     plugins: &mut Plugins,
     res: &Resources,
@@ -47,6 +47,12 @@ pub fn draw_home_screen(
             ui.separator();
             if ui.button("Credits").clicked() {
                 selection = SelectStatus::Credits;
+            }
+            if cfg!(not(target_arch = "wasm32")) {
+                ui.separator();
+                if ui.button("Exit").clicked() {
+                    app.exit();
+                }
             }
         });
     });

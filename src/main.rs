@@ -2,7 +2,7 @@ use notan::draw::DrawConfig;
 use notan::egui::{EguiConfig, EguiPluginSugar};
 use notan::extra::FpsLimit;
 use notan::prelude::*;
-use race_game_rust::save::load_or_log_err;
+use race_game_rust::save::{load_or_log_err, save_or_log_err};
 use race_game_rust::states::SelectState;
 use race_game_rust::ui::loader::Resources;
 use race_game_rust::ui::menu::apply_zoom_settings;
@@ -18,22 +18,34 @@ struct GameData {
 }
 
 fn window_config() -> WindowConfig {
-    WindowConfig::new()
+    let config = WindowConfig::new()
         .set_vsync(true)
         .set_title("Race")
-        .set_size(1024, 576)
-        .set_app_id("race")
+        .set_app_id("race");
+    if cfg!(target_arch = "wasm32") {
+        config.set_maximized(true).set_resizable(true)
+    } else {
+        let sz: Option<(u32, u32)> = load_or_log_err("window_size", "failed to load window size")
+            .unwrap_or(Some((1024, 576)));
+        match sz {
+            Some((w, h)) => config.set_size(w, h),
+            None => config.set_fullscreen(true),
+        }
+    }
 }
 
 #[notan_main]
 fn main() -> Result<(), String> {
-    notan::init_with(init)
+    let mut builder = notan::init_with(init)
         .add_plugin(FpsLimit::new(30))
         .add_config(window_config())
         .add_config(DrawConfig)
         .add_config(EguiConfig)
-        .draw(draw)
-        .build()
+        .draw(draw);
+    if cfg!(not(target_arch = "wasm32")) {
+        builder = builder.event(event);
+    }
+    builder.build()
 }
 
 fn adjust_font_sizes(gfx: &mut Graphics, plugins: &mut Plugins) {
@@ -46,6 +58,17 @@ fn adjust_font_sizes(gfx: &mut Graphics, plugins: &mut Plugins) {
         });
     });
     gfx.render(&output);
+}
+
+fn event(app: &mut App, event: Event) {
+    if matches!(event, Event::Exit) {
+        let window_size = if app.window().is_fullscreen() {
+            None
+        } else {
+            Some(app.window().size())
+        };
+        save_or_log_err("window_size", &window_size, "Failed to save window size");
+    }
 }
 
 fn init(gfx: &mut Graphics, plugins: &mut Plugins) -> GameData {
@@ -65,10 +88,6 @@ fn init(gfx: &mut Graphics, plugins: &mut Plugins) -> GameData {
 }
 
 fn draw(app: &mut App, gfx: &mut Graphics, plugins: &mut Plugins, data: &mut GameData) {
-    if cfg!(target_arch = "wasm32") {
-        let sz = app.window().container_size();
-        app.window().set_size(sz.0 as u32, sz.1 as u32);
-    }
     data.state
         .borrow(|st| st.run(app, gfx, plugins, &data.resources, &mut data.settings));
 }

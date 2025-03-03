@@ -64,12 +64,6 @@ fn deserialize_keys<'de, D: Deserializer<'de>>(deserializer: D) -> Result<KeySet
     Ok(settings)
 }
 
-const fn default_height() -> f32 {
-    576.0
-}
-const fn default_width() -> f32 {
-    1024.0
-}
 const fn one() -> f32 {
     1.0
 }
@@ -96,8 +90,6 @@ pub struct Settings {
     pub animate_tooltips: bool,
     #[serde(default = "true_fn")]
     pub tutorial: bool,
-    #[serde(default)]
-    pub fullscreen: bool,
     #[serde(default)]
     pub zoom: ZoomSettings,
 }
