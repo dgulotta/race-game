@@ -16,6 +16,7 @@ pub struct Resources {
     pub cars: Vec<Texture>,
     pub erase: Texture,
     pub font: Font,
+    pub sample: GuiImage,
 }
 
 impl Resources {
@@ -27,6 +28,7 @@ impl Resources {
             erase: load_texture(gfx, include_bytes!("../../res/x.png")),
             cars: load_cars(gfx),
             font: load_font(gfx),
+            sample: load_gui_texture(gfx, include_bytes!("../../res/sample_track.png")),
         }
     }
 }

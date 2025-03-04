@@ -285,7 +285,7 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
                     key_name(settings.keys[&Action::Flip])),
                 );
             } else {
-                tutorial_text(ctx,"The goal for this level is for the cars to finish the race in the same order that they started it.");
+                tutorial_text(ctx,"The goal for this level is for the cars to finish the race in the same order that they started it.\n\nHover the mouse over the pieces of track in the top panel to see what they do.");
             }
         }
         Some(2) => {

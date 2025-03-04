@@ -1,42 +1,66 @@
 use notan::{
     app::{App, Color, Graphics, Plugins},
-    egui::{self, Context, EguiPluginSugar, Grid, Rect, RichText, Ui},
+    egui::{self, Context, EguiPluginSugar, Grid, RichText, Ui},
 };
 
 use super::{
-    graphics::{allocate_ui_space, create_draw_masked, TileGraphics, TILE_SIZE},
+    graphics::TILE_SIZE,
     gui::central_panel,
     input::key_name,
     loader::Resources,
     settings::{Settings, ZoomSettings},
 };
 use crate::{
-    course::TileCoord,
-    direction::DihedralElement,
     input::Action,
     level::LevelData,
     save::save_or_log_err,
     states::{CustomSpecState, DialogResponse, SettingsMenu, SettingsState},
-    tile::{Tile, TileType},
 };
 
 pub fn apply_zoom_settings(settings: &Settings, ctx: &Context) {
     ctx.set_zoom_factor(settings.zoom.font_size);
 }
 
+const SIZES: &[f32] = &[0.50, 0.75, 1.00, 1.25, 1.50, 1.75, 2.00, 3.00, 4.00];
+
+fn zoom_string(value: f32) -> String {
+    format!("{:.0}%", value * 100.0)
+}
+
+fn size_combo(ui: &mut Ui, name: &str, value: &mut f32) {
+    egui::ComboBox::from_label(name)
+        .selected_text(zoom_string(*value))
+        .show_ui(ui, |ui| {
+            for sz in SIZES {
+                ui.selectable_value(value, *sz, zoom_string(*sz));
+            }
+        });
+}
+
 fn display_settings(
     app: &mut App,
+    res: &Resources,
     settings: &mut Settings,
-    temp_zoom: &mut ZoomSettings,
+    _temp_zoom: &mut ZoomSettings,
     ui: &mut Ui,
-) -> Rect {
+) {
+    let old_font_size = settings.zoom.font_size;
+    if cfg!(not(target_arch = "wasm32")) {
+        let mut full = app.window().is_fullscreen();
+        ui.checkbox(&mut full, "Fullscreen");
+        app.window().set_fullscreen(full);
+    }
+    size_combo(ui, "Road tile size", &mut settings.zoom.tile_size);
+    size_combo(ui, "UI size", &mut settings.zoom.font_size);
+    apply_zoom_settings(settings, ui.ctx());
+    /*
     ui.add(
-        egui::Slider::new(&mut temp_zoom.tile_size, 0.5..=8.0)
-            .text("Tile size")
+        egui::Slider::new(&mut temp_zoom.tile_size, 0.5..=4.0)
+            .text("Road tile size")
             .logarithmic(true),
     );
     ui.add(
-        egui::Slider::new(&mut temp_zoom.font_size, 0.5..=8.0)
+        egui::Slider::new(&mut temp_zoom.font_size, 0.5..=4.0)
             .text("UI size")
             .logarithmic(true),
     );
@@ -44,77 +68,11 @@ fn display_settings(
         settings.zoom = temp_zoom.clone();
         apply_zoom_settings(settings, ui.ctx());
     }
-    let rect = allocate_ui_space(ui, settings.zoom.tile_size, 3, 2);
-    if cfg!(not(target_arch = "wasm32")) {
-        let mut full = app.window().is_fullscreen();
-        ui.checkbox(&mut full, "Fullscreen");
-        app.window().set_fullscreen(full);
-    }
-    rect
-}
-
-const SAMPLE_TRACK: &[(Tile, TileCoord)] = &[
-    (
-        Tile {
-            tile_type: TileType::Turn,
-            transform: DihedralElement::Flip0,
-            offset: 0,
-        },
-        TileCoord(0, 0),
-    ),
-    (
-        Tile {
-            tile_type: TileType::Finish,
-            transform: DihedralElement::Flip45,
-            offset: 0,
-        },
-        TileCoord(1, 0),
-    ),
-    (
-        Tile {
-            tile_type: TileType::Turn,
-            transform: DihedralElement::Flip45,
-            offset: 0,
-        },
-        TileCoord(2, 0),
-    ),
-    (
-        Tile {
-            tile_type: TileType::Turn,
-            transform: DihedralElement::Flip135,
-            offset: 0,
-        },
-        TileCoord(0, 1),
-    ),
-    (
-        Tile {
-            tile_type: TileType::Straight,
-            transform: DihedralElement::Flip135,
-            offset: 0,
-        },
-        TileCoord(1, 1),
-    ),
-    (
-        Tile {
-            tile_type: TileType::Turn,
-            transform: DihedralElement::Flip90,
-            offset: 0,
-        },
-        TileCoord(2, 1),
-    ),
-];
-
-fn draw_sample_track(gfx: &mut Graphics, res: &Resources, settings: &Settings, rect: &Rect) {
-    let mut graphics = TileGraphics {
-        res,
-        zoom: settings.zoom.tile_size,
-        draw: create_draw_masked(gfx, rect),
-        round: 1,
-    };
-    for &(tile, pos) in SAMPLE_TRACK.iter() {
-        graphics.draw_tile(tile, pos);
-    }
-    gfx.render(&graphics.draw);
+    */
+    let tile_size = settings.tile_size() / old_font_size;
+    let img = egui::Image::new(res.sample)
+        .fit_to_exact_size(egui::Vec2::new(3.0 * tile_size, 2.0 * tile_size));
+    ui.add(img);
 }
 
 pub fn settings_menu(
@@ -127,7 +85,6 @@ pub fn settings_menu(
 ) -> bool {
     let mut exit = false;
     let mut back = false;
-    let mut track_rect = None;
     let mut output = plugins.egui(|ctx| match &mut state.menu {
         SettingsMenu::Main => {
             exit = settings_menu_main(settings, state, ctx);
@@ -137,9 +94,7 @@ pub fn settings_menu(
             back = settings_menu_choose_key(app, settings, ctx, a);
         }
         SettingsMenu::Display(window) => {
-            let (b, r) = settings_menu_display(app, settings, window, ctx);
-            back = b;
-            track_rect = Some(r);
+            back = settings_menu_display(app, res, settings, window, ctx);
         }
         SettingsMenu::Help => settings_menu_help(settings, state, ctx),
     });
@@ -148,9 +103,6 @@ pub fn settings_menu(
     }
     output.clear_color(Color::BLACK);
     gfx.render(&output);
-    if let Some(r) = track_rect {
-        draw_sample_track(gfx, res, settings, &r);
-    }
     if exit {
         save_or_log_err("settings", settings, "failed to save settings");
     }
@@ -181,17 +133,17 @@ pub fn settings_menu_main(
 
 pub fn settings_menu_display(
     app: &mut App,
+    res: &Resources,
     settings: &mut Settings,
     temp_window: &mut ZoomSettings,
     ctx: &Context,
-) -> (bool, Rect) {
+) -> bool {
     central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Display settings");
         ui.add_space(20.0);
-        let rect = display_settings(app, settings, temp_window, ui);
+        display_settings(app, res, settings, temp_window, ui);
         ui.add_space(20.0);
-        let back = ui.button(RichText::new("Back").heading()).clicked();
-        (back, rect)
+        ui.button(RichText::new("Back").heading()).clicked()
     })
 }
 
