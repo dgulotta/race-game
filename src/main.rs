@@ -21,9 +21,10 @@ fn window_config() -> WindowConfig {
     let config = WindowConfig::new()
         .set_vsync(true)
         .set_title("Race")
-        .set_app_id("race");
+        .set_app_id("race")
+        .set_resizable(true);
     if cfg!(target_arch = "wasm32") {
-        config.set_maximized(true).set_resizable(true)
+        config.set_maximized(true)
     } else {
         let sz: Option<(u32, u32)> = load_or_log_err("window_size", "failed to load window size")
             .unwrap_or(Some((1024, 576)));
