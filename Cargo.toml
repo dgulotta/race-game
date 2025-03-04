@@ -1,12 +1,11 @@
 [package]
-name = "race-game-rust"
+name = "race"
 version = "0.1.0"
 edition = "2021"
 license = "GPL-3.0-only AND CC-BY-SA-4.0"
 
 [dependencies]
 notan = { git = "https://github.com/dgulotta/notan.git", features = ["egui","extra","serde"], branch = "zoom" }
-#notan = { path = "../../sources/notan", features = ["egui","extra","serde"] }
 serde = { version = "1.0.214", features = ["rc"] }
 toml = "0.8.19"
 strum = { version ="0.26.3", features = ["derive"] }

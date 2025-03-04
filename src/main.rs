@@ -2,12 +2,12 @@ use notan::draw::DrawConfig;
 use notan::egui::{EguiConfig, EguiPluginSugar};
 use notan::extra::FpsLimit;
 use notan::prelude::*;
-use race_game_rust::save::{load_or_log_err, save_or_log_err};
-use race_game_rust::states::SelectState;
-use race_game_rust::ui::loader::Resources;
-use race_game_rust::ui::menu::apply_zoom_settings;
-use race_game_rust::ui::screen::Screen;
-use race_game_rust::ui::settings::Settings;
+use race::save::{load_or_log_err, save_or_log_err};
+use race::states::SelectState;
+use race::ui::loader::Resources;
+use race::ui::menu::apply_zoom_settings;
+use race::ui::screen::Screen;
+use race::ui::settings::Settings;
 use takeable::Takeable;
 
 #[derive(AppState)]

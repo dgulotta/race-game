@@ -1924,7 +1924,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "race-game-rust"
+name = "race"
 version = "0.1.0"
 dependencies = [
  "anyhow",
