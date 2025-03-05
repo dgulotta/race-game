@@ -12,6 +12,7 @@ pub fn draw_home_screen(
     state: &SelectState,
 ) -> SelectStatus {
     let mut selection = SelectStatus::Idle;
+    let num_solved = state.solved.iter().filter(|s| s.is_some()).count();
     let mut output = plugins.egui(|ctx| {
         central_panel(ctx, egui::Align::Min, |ui| {
             ui.heading("Select a level");
@@ -21,6 +22,9 @@ pub fn draw_home_screen(
                 ui.heading("Rounds");
                 ui.end_row();
                 for (n, lev) in res.levels.iter().enumerate() {
+                    if n > 2 * num_solved {
+                        break;
+                    }
                     let check = if state.solved[n].is_some() {
                         " \u{2714}"
                     } else {
