@@ -33,3 +33,5 @@ wasm-bindgen = { version = "0.2", default-features=false }
 js-sys = "0.3.76"
 web-sys = { version = "0.3.76", features = ["Blob","Document","Element","HtmlAnchorElement","Url","Window"] }
 
+[features]
+debug = []

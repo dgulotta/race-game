@@ -62,9 +62,12 @@ fn test_rotation_for() {
 fn test_solutions() {
     let solutions = courses_from_toml(include_str!("../res/solutions.toml")).unwrap();
     for lvl in load_levels() {
-        if let Some(c) = solutions.get(&lvl.name) {
+        if let Some(course) = solutions.get(&lvl.name) {
+            for tile in course.values() {
+                assert!(!lvl.banned[tile.tile_type]);
+            }
             let mut tracker = Tracker::new(lvl.cars);
-            let mut sim = Simulator::new(c.clone(), lvl.cars);
+            let mut sim = Simulator::new(course.clone(), lvl.cars);
             while !(sim.is_finished() || tracker.is_loop_detected()) {
                 sim.run_round();
                 for ev in sim.events() {

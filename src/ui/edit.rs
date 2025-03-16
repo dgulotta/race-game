@@ -13,7 +13,7 @@ use crate::{
     direction::DihedralElement,
     input::Action,
     level::LevelData,
-    save::{course_is_nonempty, load_course},
+    save::{course_is_nonempty, course_to_vec, load_course},
     selection::{drag_tiles, selection_rect, DragState, SelectState},
     states::{DialogResponse, EditState, TrackSelection},
     tile::TileType,
@@ -99,9 +99,9 @@ struct PanelManager<'a> {
 impl PanelManager<'_> {
     fn image_for_action(&self, action: Action) -> &GuiImage {
         match action {
-            Action::SelectModify => &self.res.gui_tiles[0],
-            Action::SelectErase => &self.res.gui_tiles[1],
-            Action::SelectTile(t) => &self.res.gui_tiles[(t as usize) + 2],
+            Action::SelectModify => &self.res.select,
+            Action::SelectErase => &self.res.erase.gui_image,
+            Action::SelectTile(t) => &self.res.tiles[t].gui_image,
             _ => unreachable!(),
         }
     }
@@ -158,7 +158,9 @@ fn draw_track_panel(
                         pm.draw_button(Action::SelectModify);
                         pm.draw_button(Action::SelectErase);
                         for t in TileType::iter() {
-                            pm.draw_button(Action::SelectTile(t));
+                            if !state.level_data.banned[t] {
+                                pm.draw_button(Action::SelectTile(t));
+                            }
                         }
                         (pm.action, pm.tooltip)
                     })
@@ -209,7 +211,7 @@ fn draw_course_edit(
             }
             TrackSelection::Erase => {
                 graphics
-                    .draw_tile_sprite(&res.erase, DihedralElement::Id, pos)
+                    .draw_tile_sprite(&res.erase.textures[0], DihedralElement::Id, pos)
                     .alpha(OVERLAY_ALPHA);
             }
             TrackSelection::Modify(selection) => {
@@ -270,7 +272,8 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
             } else {
                 tutorial_window(ctx, |ui| {
                     ui.label("Your job is to design race tracks.\n\nEvery track needs a start / finish line.\n\nTo select the start/finish line, click the button above with this icon:");
-                    let img = egui::Image::new(res.gui_tiles[4]).max_width(TILE_SIZE);
+                    let img = egui::Image::new(res.tiles[TileType::Finish].gui_image)
+                        .max_width(TILE_SIZE);
                     ui.add(img);
                 });
             }
@@ -327,6 +330,15 @@ fn draw_copy_dialog<'a>(
     selected
 }
 
+fn process_debug_commands(app: &App, state: &mut EditState) {
+    if app.keyboard.was_pressed(KeyCode::F1) {
+        let mut lev = std::collections::BTreeMap::new();
+        let course = course_to_vec(state.course.get_course());
+        lev.insert(state.level_data.name.clone(), course);
+        println!("{}", toml::to_string(&lev).unwrap());
+    }
+}
+
 pub fn draw_edit(
     app: &mut App,
     gfx: &mut Graphics,
@@ -336,6 +348,9 @@ pub fn draw_edit(
     state: &mut EditState,
 ) -> Option<Action> {
     let mut play_command = process_keyboard(app, settings, state);
+    if cfg!(feature = "debug") {
+        process_debug_commands(app, state);
+    }
     let mut mouse_in_gui = false;
     let mut tooltip: Option<TooltipArea> = None;
     let mut draw_rect = Rect::NOTHING;

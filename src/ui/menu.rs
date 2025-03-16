@@ -233,6 +233,7 @@ pub fn custom_spec_menu(
                         cars: state.cars,
                         finish: state.get_finish().unwrap(),
                         tutorial: None,
+                        banned: Default::default(),
                     };
                     status = DialogResponse::Accepted(lvl);
                 }

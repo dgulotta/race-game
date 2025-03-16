@@ -109,10 +109,20 @@ pub fn load_solve(lvl: &LevelData) -> Option<SolveData> {
 }
 
 #[derive(Serialize, Deserialize)]
-struct TileData {
-    coord: TileCoord,
+pub struct TileData {
+    pub coord: TileCoord,
     #[serde(flatten)]
-    tile: Tile,
+    pub tile: Tile,
+}
+
+pub fn course_to_vec(course: &Course) -> Vec<TileData> {
+    course
+        .iter()
+        .map(|(k, v)| TileData {
+            coord: *k,
+            tile: *v,
+        })
+        .collect()
 }
 
 pub fn saved_courses_to_toml() -> String {
@@ -120,6 +130,8 @@ pub fn saved_courses_to_toml() -> String {
     let data: BTreeMap<_, _> = levels
         .iter()
         .filter_map(|lvl| {
+            let course = course_to_vec(&load_course(lvl)?);
+            /*
             let course: Vec<_> = load_course(lvl)?
                 .iter()
                 .map(|(k, v)| TileData {
@@ -127,6 +139,7 @@ pub fn saved_courses_to_toml() -> String {
                     tile: *v,
                 })
                 .collect();
+            */
             Some((lvl.name.clone(), course))
         })
         .collect();

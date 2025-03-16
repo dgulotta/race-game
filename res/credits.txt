@@ -5,6 +5,7 @@ Dan Gulotta
 Don Gulotta
 Pat Gulotta
 Latoya van der Meer
+Paul Zagieboylo
 
 Made with Notan,
 https://github.com/Nazariglez/notan

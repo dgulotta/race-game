@@ -10,23 +10,12 @@ pub enum TileType {
     Straight,
     Turn,
     Finish,
-    LightIntersection,
-    YieldIntersection,
     LightTurns,
-    Merge,
     LightForwardTurn,
+    Merge,
+    YieldIntersection,
+    LightIntersection,
 }
-
-static TRACK_LABELS: &[&str] = &[
-    "Straight",
-    "Turn",
-    "Start/Finish",
-    "Intersection with lights",
-    "Intersection with yield sign",
-    "Left/right turn with lights",
-    "Merge with yield sign",
-    "Straight/turn with lights",
-];
 
 impl TileType {
     pub const fn has_lights(self) -> bool {
@@ -37,7 +26,17 @@ impl TileType {
     }
 
     pub const fn name(self) -> &'static str {
-        TRACK_LABELS[self as usize]
+        use TileType::*;
+        match self {
+            Straight => "Straight",
+            Turn => "Turn",
+            Finish => "Start/Finish",
+            LightIntersection => "Intersection with lights",
+            YieldIntersection => "Intersection with yield sign",
+            LightTurns => "Left/right turn with lights",
+            Merge => "Merge with yield sign",
+            LightForwardTurn => "Straight/turn with lights",
+        }
     }
 }
 

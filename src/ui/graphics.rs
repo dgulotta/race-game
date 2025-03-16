@@ -60,7 +60,7 @@ impl TileGraphics<'_> {
 
     pub fn draw_tile(&mut self, tile: Tile, pos: TileCoord) -> DrawBuilder<'_, Image<'_>> {
         let total_offset = (self.round ^ (tile.offset as usize) ^ 1) & 1;
-        let sprite = &self.res.tiles[tile.tile_type as usize][total_offset];
+        let sprite = &self.res.tiles[tile.tile_type].textures[total_offset];
         self.draw_tile_sprite(sprite, tile.transform, pos)
     }
 
