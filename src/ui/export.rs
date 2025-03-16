@@ -82,17 +82,18 @@ mod native {
     use std::{fs::File, io::BufWriter};
 
     use egui_file_dialog::FileDialog;
+    use takeable::Takeable;
 
     use super::{Context, FileExport, SaveFn};
 
     pub struct Export {
-        dialog: FileDialog,
+        dialog: Takeable<FileDialog>,
         save: Option<SaveFn>,
     }
 
     pub fn make_exporter() -> Box<dyn FileExport> {
         Box::new(Export {
-            dialog: FileDialog::new(),
+            dialog: Takeable::new(FileDialog::new()),
             save: None,
         })
     }
@@ -101,8 +102,10 @@ mod native {
         fn set_save_action(
             &mut self,
             save: SaveFn,
-            _default_filename: &str,
+            default_filename: &str,
         ) -> Result<(), anyhow::Error> {
+            self.dialog
+                .borrow(|d| d.default_file_name(default_filename));
             self.dialog.save_file();
             self.save = Some(save);
             Ok(())
