@@ -259,6 +259,12 @@ pub(crate) fn key_window(ctx: &Context, settings: &Settings, editing: bool) {
     });
 }
 
+fn tutorial_new_tiles(state: &EditState, ctx: &Context) {
+    if state.track_selection.tile_type().is_none() && state.course.get_course().is_empty() {
+        tutorial_text(ctx, "New track types are available.");
+    }
+}
+
 fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &Context) {
     match state.level_data.tutorial {
         Some(0) => {
@@ -304,7 +310,12 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
                         key_name(settings.keys[&Action::ToggleLights])
                     ),
                 )
+            } else {
+                tutorial_new_tiles(state, ctx);
             }
+        }
+        Some(3) => {
+            tutorial_new_tiles(state, ctx);
         }
         _ => (),
     }

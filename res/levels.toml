@@ -2,7 +2,6 @@
 name = "Level 0"
 cars = 10
 finish = []
-tiles = [0, 1, 2, 3]
 tutorial = 0
 banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightIntersection"]
 
@@ -10,7 +9,6 @@ banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightInte
 name = "Level 1"
 cars = 10
 finish = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-tiles = [0, 1, 2, 3]
 tutorial = 1
 banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightIntersection"]
 
@@ -18,7 +16,6 @@ banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightInte
 name = "Level 2"
 cars = 10
 finish = [0, 2, 4, 6, 8]
-tiles = [0, 1, 2, 3, 6]
 tutorial = 2
 banned = ["Merge","YieldIntersection","LightIntersection"]
 
@@ -26,36 +23,45 @@ banned = ["Merge","YieldIntersection","LightIntersection"]
 name = "Level 3"
 cars = 10
 finish = [1, 0, 3, 2, 5, 4, 7, 6, 9, 8]
+tutorial = 3
 banned = ["YieldIntersection","LightIntersection"]
 
 [[levels]]
 name = "Level 4"
-cars = 10
-finish = [0, 1, 2, 3, 4, 5, 6, 7]
-banned = ["YieldIntersection"]
+cars = 12
+finish = [0, 2, 4, 6]
+tutorial = 3
+banned = ["LightIntersection"]
 
 [[levels]]
 name = "Level 5"
 cars = 10
 finish = [8, 9]
+tutorial = 3
 tiles = [0, 1, 2, 3, 4]
 
 [[levels]]
 name = "Level 6"
-cars = 8
-finish = [7]
+cars = 10
+finish = [0, 1, 2, 3, 4, 5, 6, 7]
+banned = ["YieldIntersection"]
 
 [[levels]]
 name = "Level 7"
 cars = 8
-finish = [7, 6, 5, 4, 3, 2, 1, 0]
+finish = [7]
 
 [[levels]]
 name = "Level 8"
+cars = 8
+finish = [7, 6, 5, 4, 3, 2, 1, 0]
+
+[[levels]]
+name = "Level 9"
 cars = 16
 finish = [0, 1, 2, 3, 8, 9, 10, 11]
 
 [[levels]]
-name = "Level 9"
+name = "Level 10"
 cars = 12
 finish = [0, 3, 6, 9]
