@@ -405,7 +405,7 @@ pub fn draw_edit(
                 _ => (),
             }
         }
-        draw_rect = ctx.available_rect();
+        draw_rect = ctx.available_rect() * ctx.zoom_factor();
         let (action, new_tooltip) = draw_track_panel(res, settings, state, ctx);
         tooltip = new_tooltip;
         if let Some(act) = action {

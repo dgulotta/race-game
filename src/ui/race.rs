@@ -343,7 +343,7 @@ pub fn draw_race(
         if state.status == RaceEndStatus::ShowingPopup {
             command = command.or(show_success(app, gfx, res, settings, state, ctx));
         }
-        draw_rect = ctx.available_rect();
+        draw_rect = ctx.available_rect() * ctx.zoom_factor();
         if state.show_keys {
             key_window(ctx, settings, false);
         }
