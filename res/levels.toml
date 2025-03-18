@@ -49,19 +49,24 @@ banned = ["YieldIntersection"]
 [[levels]]
 name = "Level 7"
 cars = 8
-finish = [7]
+finish = [1, 2, 3, 4, 5, 6, 7]
 
 [[levels]]
 name = "Level 8"
 cars = 8
-finish = [7, 6, 5, 4, 3, 2, 1, 0]
+finish = [7]
 
 [[levels]]
 name = "Level 9"
+cars = 8
+finish = [7, 6, 5, 4, 3, 2, 1, 0]
+
+[[levels]]
+name = "Level 10"
 cars = 16
 finish = [0, 1, 2, 3, 8, 9, 10, 11]
 
 [[levels]]
-name = "Level 10"
+name = "Level 11"
 cars = 12
 finish = [0, 3, 6, 9]
