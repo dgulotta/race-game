@@ -347,6 +347,12 @@ fn process_debug_commands(app: &App, state: &mut EditState) {
         let course = course_to_vec(state.course.get_course());
         lev.insert(state.level_data.name.clone(), course);
         println!("{}", toml::to_string(&lev).unwrap());
+    } else if app.keyboard.was_pressed(KeyCode::F2) {
+        let solutions =
+            crate::save::courses_from_toml(include_str!("../../res/solutions.toml")).unwrap();
+        if let Some(course) = solutions.get(&state.level_data.name) {
+            state.course.set_course(course.clone());
+        }
     }
 }
 

@@ -123,6 +123,16 @@ impl CourseEditState {
             true
         }
     }
+    pub fn from_course(course: Course) -> Self {
+        let finish = course.iter().find_map(|(pos, tile)| {
+            if tile.tile_type == TileType::Finish {
+                Some(*pos)
+            } else {
+                None
+            }
+        });
+        Self { finish, course }
+    }
 }
 
 pub struct CourseEdit {
@@ -189,14 +199,7 @@ impl<'a> Transaction<'a> {
 
 impl CourseEdit {
     pub fn new(course: Course, level: Rc<LevelData>) -> Self {
-        let finish = course.iter().find_map(|(pos, tile)| {
-            if tile.tile_type == TileType::Finish {
-                Some(*pos)
-            } else {
-                None
-            }
-        });
-        let state = CourseEditState { course, finish };
+        let state = CourseEditState::from_course(course);
         Self {
             stack: vec![state],
             pos: 0,
@@ -224,7 +227,10 @@ impl CourseEdit {
     pub fn set_single(&mut self, pos: TileCoord, tile: Tile) {
         self.edit().set(pos, tile);
     }
-    fn save(&self) {
+    pub fn set_course(&mut self, course: Course) {
+        self.push(CourseEditState::from_course(course));
+    }
+    pub fn save(&self) {
         save_course(&self.level, self.get_course());
     }
     fn push(&mut self, st: CourseEditState) {
