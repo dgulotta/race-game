@@ -68,5 +68,10 @@ finish = [0, 1, 2, 3, 8, 9, 10, 11]
 
 [[levels]]
 name = "Level 11"
+cars = 24
+finish = [2, 8, 14, 20]
+
+[[levels]]
+name = "Level 12"
 cars = 12
 finish = [0, 3, 6, 9]
