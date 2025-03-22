@@ -8,7 +8,7 @@ use crate::{
     direction::{DihedralElement, Direction},
     input::Action,
     level::{LevelData, SolveData},
-    playback::Playback,
+    playback::{animations, CarAnimation, Playback},
     save::{load_course, load_solve, save_course, save_solve},
     simulator::{CarData, Simulator},
     tile::{Tile, TileType},
@@ -230,6 +230,8 @@ pub struct RaceState {
     pub edit: CourseEdit,
     pub show_keys: bool,
     pub exporter: Box<dyn FileExport>,
+    pub animations: Vec<CarAnimation>,
+    pub round_display_time: Duration,
 }
 
 impl RaceState {
@@ -246,6 +248,8 @@ impl RaceState {
             edit,
             show_keys: false,
             exporter: make_exporter(),
+            animations: Default::default(),
+            round_display_time: Default::default(),
         }
     }
 
@@ -267,12 +271,20 @@ impl RaceState {
         }
     }
 
-    pub fn forward(&mut self) {
+    pub fn forward(&mut self, animate: bool) {
         if self.round >= self.rounds_available() - 1 {
             self.sim_round();
         }
         if self.round < self.rounds_available() - 1 {
+            let old_round = self.round;
             self.round += 1;
+            if animate {
+                let old = &self.tracker.get_cars()[old_round];
+                let new = self.get_cars();
+                self.animations = animations(old, new);
+            } else {
+                self.animations.clear();
+            }
         }
     }
 
@@ -283,27 +295,37 @@ impl RaceState {
     }
 
     pub fn process_command(&mut self, command: Action, time: Duration) {
+        self.round_display_time = time;
         match command {
-            Action::Seek(n) => self.round = n,
+            Action::Seek(n) => {
+                self.round = n;
+                self.animations.clear();
+            }
             Action::Start => {
                 self.round = 0;
+                self.animations.clear();
                 self.playback = Playback::Paused;
             }
             Action::StepBack => {
                 if self.round > 0 {
                     self.round -= 1;
                 }
+                self.animations.clear();
                 self.playback = Playback::Paused;
             }
-            Action::Pause => self.playback = Playback::Paused,
-            Action::Play => self.playback = Playback::Playing(time),
+            Action::Pause => {
+                self.animations.clear();
+                self.playback = Playback::Paused;
+            }
+            Action::Play => self.playback = Playback::Playing,
             Action::StepForward => {
-                self.forward();
+                self.forward(true);
                 self.playback = Playback::Paused;
             }
-            Action::FastForward => self.playback = Playback::Fast(time),
+            Action::FastForward => self.playback = Playback::Fast,
             Action::End => {
                 self.round = self.rounds_available() - 1;
+                self.animations.clear();
                 if self.sim.is_finished() {
                     self.playback = Playback::Paused;
                 }
@@ -314,20 +336,11 @@ impl RaceState {
     }
 
     pub fn check_advance(&mut self, time: Duration) {
-        match self.playback {
-            Playback::Playing(t) => {
-                if (time - t).as_millis() >= 500 {
-                    self.forward();
-                    self.playback = Playback::Playing(time);
-                }
-            }
-            Playback::Fast(t) => {
-                if (time - t).as_millis() >= 100 {
-                    self.forward();
-                    self.playback = Playback::Fast(time);
-                }
-            }
-            _ => (),
+        if !matches!(self.playback, Playback::Paused)
+            && (time - self.round_display_time) >= self.playback.frame_duration()
+        {
+            self.forward(true);
+            self.round_display_time = time;
         }
         self.check_playback_end();
     }

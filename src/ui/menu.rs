@@ -45,6 +45,7 @@ fn display_settings(
     ui: &mut Ui,
 ) {
     let old_font_size = settings.zoom.font_size;
+    ui.checkbox(&mut settings.smooth_animation, "Smooth animation");
     if cfg!(not(target_arch = "wasm32")) {
         let mut full = app.window().is_fullscreen();
         ui.checkbox(&mut full, "Fullscreen");

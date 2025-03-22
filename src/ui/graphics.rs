@@ -12,6 +12,7 @@ pub static CAR_SCALE_RATIO: f32 = TILE_SIZE / 256.0;
 use super::loader::Resources;
 use crate::course::{Course, TileCoord};
 use crate::direction::{rotation_for, DihedralElement, Direction};
+use crate::playback::{CarAnimation, CarPosF};
 use crate::simulator::{CarCoord, CarData};
 use crate::tile::Tile;
 
@@ -29,6 +30,10 @@ impl TileGraphics<'_> {
 
     fn car_to_screen(&self, value: CarCoord) -> Vec2 {
         0.5 * self.tile_size() * Vec2::new((value.0 + 1) as f32, (value.1 + 1) as f32)
+    }
+
+    fn car_to_screen_smooth(&self, pos: Vec2) -> Vec2 {
+        0.5 * self.tile_size() * Vec2::new(pos.x + 1.0, pos.y + 1.0)
     }
 
     fn tile_to_screen(&self, value: TileCoord) -> Vec2 {
@@ -55,6 +60,17 @@ impl TileGraphics<'_> {
         let translation = self.car_to_screen(pos);
         let offset = -0.5 * Vec2::new(width, height);
         let rot = matrix_for_dihedral(transform);
+        Affine2::from_mat2_translation(rot, translation + rot * offset).into()
+    }
+
+    fn rotation_smooth(dir: Vec2) -> Mat2 {
+        Mat2::from_cols(Vec2::new(-dir.y, dir.x), -dir)
+    }
+
+    pub fn transform_for_car_smooth(&self, pos: &CarPosF, width: f32, height: f32) -> Mat3 {
+        let translation = self.car_to_screen_smooth(pos.pos);
+        let offset = -0.5 * Vec2::new(width, height);
+        let rot = Self::rotation_smooth(pos.dir);
         Affine2::from_mat2_translation(rot, translation + rot * offset).into()
     }
 
@@ -105,6 +121,27 @@ impl TileGraphics<'_> {
         self.draw.image(sprite).size(width, height).transform(trans);
     }
 
+    pub fn draw_car_smooth(&mut self, id: usize, pos: &CarPosF) {
+        let sprite = &self.res.cars[color_for_car(id)];
+        let width = sprite.width() * CAR_SCALE_RATIO * self.zoom;
+        let height = sprite.height() * CAR_SCALE_RATIO * self.zoom;
+        let trans = self.transform_for_car_smooth(pos, width, height);
+        self.draw.image(sprite).size(width, height).transform(trans);
+    }
+
+    pub fn draw_cars(&mut self, cars: &[CarData], animations: &[CarAnimation], t: f32) {
+        if !animations.is_empty() {
+            for anim in animations {
+                self.draw_car_smooth(anim.id, &anim.position_at_time(t));
+            }
+        } else {
+            for car in cars {
+                self.draw_car(car);
+                self.draw_car_number(car);
+            }
+        }
+    }
+
     fn draw_number(&mut self, text: &str, mat: Mat3) {
         let size = self.tile_size() * 0.4;
         self.draw
@@ -116,19 +153,31 @@ impl TileGraphics<'_> {
             .v_align_middle();
     }
 
-    pub fn draw_car_number(&mut self, car: &CarData) {
-        let trans = rotation_for(Direction::Up, car.dir);
-        let text = car.id.to_string();
-        let m = 0.5 * matrix_for_dihedral(trans);
-        let pos = self.car_to_screen(car.pos);
-        let aff = Affine2::from_mat2_translation(m, pos);
-        let mat: Mat3 = aff.into();
+    fn draw_car_number_base(&mut self, id: usize, mat: Mat3) {
+        let text = id.to_string();
         self.draw_number(&text, mat);
         let bound = self.draw.last_text_bounds();
         self.draw
             .rect((bound.x, bound.y), (bound.width, bound.height))
-            .transform(aff.into());
+            .transform(mat);
         self.draw_number(&text, mat);
+    }
+
+    pub fn draw_car_number(&mut self, car: &CarData) {
+        let trans = rotation_for(Direction::Up, car.dir);
+        let m = 0.5 * matrix_for_dihedral(trans);
+        let pos = self.car_to_screen(car.pos);
+        let aff = Affine2::from_mat2_translation(m, pos);
+        let mat: Mat3 = aff.into();
+        self.draw_car_number_base(car.id, mat);
+    }
+
+    pub fn draw_car_number_smooth(&mut self, id: usize, pos: &CarPosF) {
+        let m = 0.5 * Self::rotation_smooth(pos.dir);
+        let pos = self.car_to_screen_smooth(pos.pos);
+        let aff = Affine2::from_mat2_translation(m, pos);
+        let mat: Mat3 = aff.into();
+        self.draw_car_number_base(id, mat);
     }
 }
 

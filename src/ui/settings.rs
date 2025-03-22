@@ -95,6 +95,8 @@ pub struct Settings {
     pub animate_tooltips: bool,
     #[serde(default = "true_fn")]
     pub tutorial: bool,
+    #[serde(default = "true_fn")]
+    pub smooth_animation: bool,
     #[serde(default)]
     pub zoom: ZoomSettings,
 }

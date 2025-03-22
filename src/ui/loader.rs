@@ -108,24 +108,6 @@ fn load_tile_from_bytes(gfx: &mut Graphics, bytes: (&[u8], Option<&[u8]>)) -> Ti
     }
 }
 
-/*
-pub fn load_gui_tiles(gfx: &mut Graphics) -> Vec<GuiImage> {
-    let mut tiles = vec![
-        load_gui_texture(gfx, include_bytes!("../../res/cursor.png")),
-        load_gui_texture(gfx, include_bytes!("../../res/x.png")),
-    ];
-    tiles.extend(TILE_IMAGES.iter().map(|i| load_gui_texture(gfx, i[0])));
-    tiles
-}
-
-pub fn load_tiles(gfx: &mut Graphics) -> Vec<[Texture; 2]> {
-    TILE_IMAGES
-        .iter()
-        .map(|i| [load_texture(gfx, i[0]), load_texture(gfx, i[1])])
-        .collect()
-}
-*/
-
 pub fn load_tile_type(tile: TileType) -> (&'static [u8], Option<&'static [u8]>) {
     use TileType::*;
     match tile {

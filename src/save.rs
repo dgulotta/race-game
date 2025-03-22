@@ -94,7 +94,7 @@ pub fn load_course(lvl: &LevelData) -> Option<Course> {
 }
 
 pub fn course_is_nonempty(lvl: &LevelData) -> bool {
-    load_course(lvl).map_or(false, |c| !c.is_empty())
+    load_course(lvl).is_some_and(|c| !c.is_empty())
 }
 
 pub fn save_solve(lvl: &LevelData, solve: &SolveData) {

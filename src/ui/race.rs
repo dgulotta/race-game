@@ -39,7 +39,7 @@ impl PlaybackPanelState {
         !self.editing()
     }
     fn play_pressed(&self) -> bool {
-        matches!(self, Self::Viewing(Playback::Playing(_), _, _))
+        matches!(self, Self::Viewing(Playback::Playing, _, _))
     }
     fn pause_pressed(&self) -> bool {
         matches!(self, Self::Viewing(Playback::Paused, _, _))
@@ -353,18 +353,35 @@ pub fn draw_race(
         state.process_command(cmd, time);
     }
     state.check_advance(time);
+    let round = if settings.smooth_animation
+        && !state.animations.is_empty()
+        && time < state.round_display_time + state.playback.frame_duration()
+    {
+        state.round - 1
+    } else {
+        state.round
+    };
     let mut graphics = TileGraphics {
         res,
         zoom: settings.zoom.tile_size,
         draw: gfx.create_draw(),
-        round: state.round,
+        round,
     };
     let offset = get_draw_offset(&state.view_center, &draw_rect);
     graphics.set_offset(&offset);
     graphics.draw_course(state.sim.get_course());
-    for car in state.get_cars() {
-        graphics.draw_car(car);
-        graphics.draw_car_number(car);
+    if settings.smooth_animation && !state.animations.is_empty() {
+        let t = (time - state.round_display_time).div_duration_f32(state.playback.frame_duration());
+        for anim in state.animations.iter() {
+            let pos = anim.position_at_time(t);
+            graphics.draw_car_smooth(anim.id, &pos);
+            graphics.draw_car_number_smooth(anim.id, &pos);
+        }
+    } else {
+        for car in state.get_cars() {
+            graphics.draw_car(car);
+            graphics.draw_car_number(car);
+        }
     }
     gfx.render(&graphics.draw);
     gfx.render(&output);

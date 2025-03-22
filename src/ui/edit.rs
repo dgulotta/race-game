@@ -13,6 +13,7 @@ use crate::{
     direction::DihedralElement,
     input::Action,
     level::LevelData,
+    playback::Playback,
     save::{course_is_nonempty, course_to_vec, load_course},
     selection::{drag_tiles, selection_rect, DragState, SelectState},
     states::{DialogResponse, EditState, TrackSelection},
@@ -301,7 +302,7 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
             if state
                 .track_selection
                 .tile_type()
-                .map_or(false, TileType::has_lights)
+                .is_some_and(TileType::has_lights)
             {
                 tutorial_text(
                     ctx,
@@ -431,23 +432,39 @@ pub fn draw_edit(
             state.tooltip = Some(TooltipState::new(tool_area.selection));
         }
         let tool_state = state.tooltip.as_mut().unwrap();
+        let time = app.timer.elapsed();
+        let round = if settings.smooth_animation
+            && !tool_state.animations.is_empty()
+            && time < tool_state.last_sim_time + Playback::Playing.frame_duration()
+        {
+            tool_state.sim.get_round() - 1
+        } else {
+            tool_state.sim.get_round()
+        };
         let mut graphics = TileGraphics {
             res,
             zoom: settings.zoom.tile_size,
             draw: create_draw_masked(gfx, &tool_area.area),
-            round: tool_state.sim.get_round(),
+            round,
         };
         for (pos, tile) in tool_state.sim.get_course().iter() {
             if (0..=2).contains(&pos.0) && (0..=2).contains(&pos.1) {
                 graphics.draw_tile(*tile, *pos);
             }
         }
-        let time = app.timer.elapsed();
-        if (time - tool_state.last_sim_time).as_millis() >= 500 {
+        if time - tool_state.last_sim_time >= Playback::Playing.frame_duration() {
             tool_state.advance(time);
         }
-        for car in &tool_state.cars {
-            graphics.draw_car(car);
+        if settings.smooth_animation && !tool_state.animations.is_empty() {
+            let t = (time - tool_state.last_sim_time)
+                .div_duration_f32(Playback::Playing.frame_duration());
+            for anim in tool_state.animations.iter() {
+                graphics.draw_car_smooth(anim.id, &anim.position_at_time(t));
+            }
+        } else {
+            for car in &tool_state.cars {
+                graphics.draw_car(car);
+            }
         }
         gfx.render(&graphics.draw);
     }

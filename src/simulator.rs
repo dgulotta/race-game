@@ -40,6 +40,12 @@ impl From<CarCoord> for TileCoord {
     }
 }
 
+impl CarCoord {
+    pub fn add_multiple(self, dir: Direction, n: isize) -> Self {
+        Self(self.0 + n * dir.dx(), self.1 + n * dir.dy())
+    }
+}
+
 pub enum SimEvent {
     Round(Vec<CarData>),
     Finished(usize),
@@ -216,7 +222,7 @@ impl<'a> RoundRunner<'a> {
     fn is_spot_free(&self, pos: CarCoord) -> bool {
         self.car_grid
             .get(&pos)
-            .map_or(true, |&i| self.status[i] == MoveStatus::Moving)
+            .is_none_or(|&i| self.status[i] == MoveStatus::Moving)
     }
 
     fn check_add_car(&self) -> bool {

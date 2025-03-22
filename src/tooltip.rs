@@ -1,6 +1,7 @@
 use crate::{
     course::{Course, TileCoord},
     direction::{DihedralElement, Direction, ROTATIONS},
+    playback::{animations, CarAnimation},
     simulator::{is_entrance, is_exit, CarData, SimEvent, Simulator, SpawnPolicy},
     tile::{Tile, TileType},
 };
@@ -10,6 +11,7 @@ pub struct TooltipState {
     pub tile: TileType,
     pub sim: Simulator,
     pub cars: Vec<CarData>,
+    pub animations: Vec<CarAnimation>,
     pub last_sim_time: Duration,
 }
 
@@ -68,6 +70,7 @@ impl TooltipState {
             sim,
             cars: Vec::new(),
             last_sim_time: Default::default(),
+            animations: Default::default(),
         }
     }
 
@@ -76,6 +79,7 @@ impl TooltipState {
         self.sim.run_round();
         for ev in self.sim.events() {
             if let SimEvent::Round(v) = ev {
+                self.animations = animations(&self.cars, &v);
                 self.cars = v;
             }
         }
