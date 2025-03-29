@@ -40,7 +40,7 @@ impl Screen for EditState {
         res: &Resources,
         settings: &mut Settings,
     ) -> Box<dyn Screen> {
-        if let Some(command) = draw_edit(app, gfx, plugins, res, settings, &mut self) {
+        match draw_edit(app, gfx, plugins, res, settings, &mut self) { Some(command) => {
             match command {
                 Action::Home => Box::new(SelectState::new(&res.levels)),
                 Action::StepForward | Action::Play | Action::FastForward => {
@@ -52,9 +52,9 @@ impl Screen for EditState {
                 Action::Settings => Box::new(SettingsState::new(self)),
                 _ => self,
             }
-        } else {
+        } _ => {
             self
-        }
+        }}
     }
 }
 

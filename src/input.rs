@@ -65,11 +65,11 @@ impl Action {
     }
 
     pub fn name_with_key_hint(&self, settings: &Settings) -> String {
-        if let Some(code) = settings.keys.get(self) {
+        match settings.keys.get(self) { Some(code) => {
             format!("{} ({})", self.name(), key_name(*code))
-        } else {
+        } _ => {
             self.name().to_string()
-        }
+        }}
     }
 
     pub const fn is_active_when_racing(&self) -> bool {
