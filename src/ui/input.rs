@@ -1,4 +1,4 @@
-use crate::{course::TileCoord, input::Action};
+use crate::{course::TileCoord, input::Action, simulator::CarCoord};
 
 use super::settings::Settings;
 use notan::{
@@ -11,6 +11,19 @@ pub fn mouse_coords(app: &App, settings: &Settings, offset: &Vec2) -> TileCoord 
     let x = ((app.mouse.x - offset.x) / tsz).floor() as isize;
     let y = ((app.mouse.y - offset.y) / tsz).floor() as isize;
     TileCoord(x, y)
+}
+
+pub fn mouse_coords_car(app: &App, settings: &Settings, offset: &Vec2) -> Option<CarCoord> {
+    let tsz = settings.tile_size();
+    let xf = (app.mouse.x - offset.x) / tsz;
+    let yf = (app.mouse.y - offset.y) / tsz;
+    if (0.25..0.75).contains(&xf.fract()) && (0.25..0.75).contains(&yf.fract()) {
+        None
+    } else {
+        let s = (xf + yf).floor() as isize;
+        let d = (xf - yf).floor() as isize;
+        Some(CarCoord(s + d, s - d - 1))
+    }
 }
 
 pub fn check_key_press(app: &App, settings: &Settings, key: Action) -> bool {

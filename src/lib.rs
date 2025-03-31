@@ -2,6 +2,7 @@ pub mod course;
 pub mod direction;
 pub mod input;
 pub mod level;
+pub mod path;
 pub mod playback;
 pub mod save;
 pub mod selection;

@@ -4,18 +4,19 @@ use std::{rc::Rc, sync::LazyLock, time::Duration};
 use notan::math::Vec2;
 
 use crate::{
-    course::{course_center, Course, CourseEdit, TileCoord},
+    course::{Course, CourseEdit, TileCoord, course_center},
     direction::{DihedralElement, Direction},
     input::Action,
     level::{LevelData, SolveData},
-    playback::{animations, CarAnimation, Playback},
+    path::Path,
+    playback::{CarAnimation, Playback, animations},
     save::{load_course, load_solve, save_course, save_solve},
     simulator::{CarData, Simulator},
     tile::{Tile, TileType},
     tooltip::TooltipState,
     tracker::Tracker,
     ui::{
-        export::{make_exporter, FileExport},
+        export::{FileExport, make_exporter},
         screen::Screen,
         settings::ZoomSettings,
     },
@@ -25,6 +26,7 @@ pub enum TrackSelection {
     Draw(Tile),
     Erase,
     Modify(super::selection::SelectState),
+    Path(Path),
 }
 
 impl TrackSelection {
@@ -56,6 +58,7 @@ impl TrackSelection {
             Self::Draw(t) => action == &Action::SelectTile(t.tile_type),
             Self::Erase => matches!(action, Action::SelectErase),
             Self::Modify(_) => matches!(action, Action::SelectModify),
+            Self::Path(_) => matches!(action, Action::SelectPath),
         }
     }
 }
@@ -172,6 +175,7 @@ impl EditState {
             | Action::Delete => self.process_transform(action),
             Action::SelectModify => self.track_selection = Default::default(),
             Action::SelectErase => self.track_selection = TrackSelection::Erase,
+            Action::SelectPath => self.track_selection = TrackSelection::Path(Default::default()),
             Action::SelectTile(t) => self.track_selection.select(t),
             Action::Scroll(dir) => adjust_view_center(&mut self.view_center, dir),
             Action::Undo => self.undo(),

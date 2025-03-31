@@ -13,19 +13,20 @@ use crate::{
     direction::DihedralElement,
     input::Action,
     level::LevelData,
+    path::track_tile,
     playback::Playback,
     save::{course_is_nonempty, course_to_vec, load_course},
-    selection::{drag_tiles, selection_rect, DragState, SelectState},
+    selection::{DragState, SelectState, drag_tiles, selection_rect},
     states::{DialogResponse, EditState, TrackSelection},
     tile::TileType,
     tooltip::TooltipState,
 };
 
 use super::{
-    graphics::{allocate_ui_space, create_draw_masked, get_draw_offset, TileGraphics, TILE_SIZE},
-    input::{check_key_press, key_name, mouse_coords},
+    graphics::{TILE_SIZE, TileGraphics, allocate_ui_space, create_draw_masked, get_draw_offset},
+    input::{check_key_press, key_name, mouse_coords, mouse_coords_car},
     loader::{GuiImage, Resources},
-    race::{draw_goal_panel, draw_playback_panel, PlaybackPanelState},
+    race::{PlaybackPanelState, draw_goal_panel, draw_playback_panel},
     settings::Settings,
 };
 
@@ -69,10 +70,26 @@ fn process_mouse(
                         select.click(pos, retain);
                     }
                 }
+                TrackSelection::Path(path) => {
+                    if let Some(car_pos) = mouse_coords_car(app, settings, offset) {
+                        path.add(car_pos);
+                    }
+                }
             }
         } else if app.mouse.left_was_released() {
-            if let TrackSelection::Modify(select) = &mut state.track_selection {
-                select.release(&mut state.course, pos);
+            match &mut state.track_selection {
+                TrackSelection::Modify(select) => select.release(&mut state.course, pos),
+                TrackSelection::Path(path) => {
+                    if !in_gui {
+                        let mut edit = state.course.edit();
+                        for w in path.path().windows(2) {
+                            let (pos, tile) = track_tile(w[0], w[1]);
+                            edit.set(pos, tile);
+                        }
+                    }
+                    path.clear();
+                }
+                _ => (),
             }
         }
     }
@@ -103,6 +120,7 @@ impl PanelManager<'_> {
             Action::SelectModify => &self.res.select,
             Action::SelectErase => &self.res.erase.gui_image,
             Action::SelectTile(t) => &self.res.tiles[t].gui_image,
+            Action::SelectPath => &self.res.path_icon,
             _ => unreachable!(),
         }
     }
@@ -158,6 +176,7 @@ fn draw_track_panel(
                         };
                         pm.draw_button(Action::SelectModify);
                         pm.draw_button(Action::SelectErase);
+                        pm.draw_button(Action::SelectPath);
                         for t in TileType::iter() {
                             if !state.level_data.banned[t] {
                                 pm.draw_button(Action::SelectTile(t));
@@ -224,6 +243,12 @@ fn draw_course_edit(
                     }
                 }
             }
+            TrackSelection::Path(path) => {
+                for p in path.path().windows(2) {
+                    let (track_pos, tile) = track_tile(p[0], p[1]);
+                    graphics.draw_tile(tile, track_pos).alpha(OVERLAY_ALPHA);
+                }
+            }
         }
     }
     graphics.draw
@@ -270,7 +295,10 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
     match state.level_data.tutorial {
         Some(0) => {
             if state.course.get_finish().is_some() {
-                tutorial_text(ctx,"The current goal is displayed in the panel on the left.\n\nThe goal for this level is for none of the cars to finish.\n\nClick the \u{23f5} button below to start the race.");
+                tutorial_text(
+                    ctx,
+                    "The current goal is displayed in the panel on the left.\n\nThe goal for this level is for none of the cars to finish.\n\nClick the \u{23f5} button below to start the race.",
+                );
             } else if state.track_selection.tile_type() == Some(TileType::Finish) {
                 tutorial_text(
                     ctx,
@@ -289,13 +317,18 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
             if state.track_selection.tile_type().is_some() {
                 tutorial_text(
                     ctx,
-                    &format!("Press {} or {} to rotate the track before placing it.  Press {} to flip the track.\n\nClick the \u{1f5ae} button below to see more keybindings, or the \u{2699} button to change the keybindings.",
-                    key_name(settings.keys[&Action::RotCCW]),
-                    key_name(settings.keys[&Action::RotCW]),
-                    key_name(settings.keys[&Action::Flip])),
+                    &format!(
+                        "Press {} or {} to rotate the track before placing it.  Press {} to flip the track.\n\nClick the \u{1f5ae} button below to see more keybindings, or the \u{2699} button to change the keybindings.",
+                        key_name(settings.keys[&Action::RotCCW]),
+                        key_name(settings.keys[&Action::RotCW]),
+                        key_name(settings.keys[&Action::Flip])
+                    ),
                 );
             } else {
-                tutorial_text(ctx,"The goal for this level is for the cars to finish the race in the same order that they started it.\n\nHover the mouse over the pieces of track in the top panel to see what they do.");
+                tutorial_text(
+                    ctx,
+                    "The goal for this level is for the cars to finish the race in the same order that they started it.\n\nHover the mouse over the pieces of track in the top panel to see what they do.",
+                );
             }
         }
         Some(2) => {

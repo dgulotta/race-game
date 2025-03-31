@@ -1,4 +1,4 @@
-use notan::random::rand::{thread_rng, Rng};
+use notan::random::rand::{Rng, thread_rng};
 
 use crate::course::{Course, TileCoord};
 use crate::direction::Direction;
@@ -10,7 +10,7 @@ type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
 
 static MAX_ROUNDS: usize = 1000;
 
-#[derive(PartialEq, Eq, Clone, Copy, Hash)]
+#[derive(PartialEq, Eq, Clone, Copy, Hash, Debug)]
 pub struct CarCoord(pub isize, pub isize);
 
 impl Add<Direction> for CarCoord {
@@ -43,6 +43,12 @@ impl From<CarCoord> for TileCoord {
 impl CarCoord {
     pub fn add_multiple(self, dir: Direction, n: isize) -> Self {
         Self(self.0 + n * dir.dx(), self.1 + n * dir.dy())
+    }
+
+    pub fn distance_squared(self, other: CarCoord) -> isize {
+        let dx = other.0 - self.0;
+        let dy = other.1 - self.1;
+        dx * dx + dy * dy
     }
 }
 

@@ -14,6 +14,7 @@ pub enum Action {
     ToggleLights,
     SelectModify,
     SelectErase,
+    SelectPath,
     SelectTile(TileType),
     Scroll(Direction),
     Undo,
@@ -42,6 +43,7 @@ impl Action {
             Self::Flip => "Flip",
             Self::ToggleLights => "Toggle lights",
             Self::SelectModify => "Select/Move",
+            Self::SelectPath => "Straight/Turns",
             Self::SelectErase => "Clear",
             Self::SelectTile(t) => t.name(),
             Self::Scroll(d) => d.name(),
@@ -65,11 +67,12 @@ impl Action {
     }
 
     pub fn name_with_key_hint(&self, settings: &Settings) -> String {
-        match settings.keys.get(self) { Some(code) => {
-            format!("{} ({})", self.name(), key_name(*code))
-        } _ => {
-            self.name().to_string()
-        }}
+        match settings.keys.get(self) {
+            Some(code) => {
+                format!("{} ({})", self.name(), key_name(*code))
+            }
+            _ => self.name().to_string(),
+        }
     }
 
     pub const fn is_active_when_racing(&self) -> bool {

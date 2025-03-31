@@ -17,7 +17,7 @@ pub type Course = rpds::HashTrieMap<
     rustc_hash::FxBuildHasher,
 >;
 
-#[derive(Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
 pub struct TileCoord(pub isize, pub isize);
 
 impl Add<Direction> for TileCoord {

@@ -40,7 +40,7 @@ impl TileType {
     }
 }
 
-#[derive(Copy, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
 pub struct Tile {
     pub tile_type: TileType,
     pub transform: DihedralElement,
