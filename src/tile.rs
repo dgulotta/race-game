@@ -48,11 +48,15 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn apply_transform(self, transform: DihedralElement, offset: u8) -> Self {
-        Self {
+    pub fn apply_transform(self, transform: DihedralElement, toggle_lights: bool) -> Self {
+        let transformed = Self {
             transform: transform * self.transform,
-            offset: offset ^ self.offset,
             ..self
+        };
+        if toggle_lights {
+            transformed.toggle_lights()
+        } else {
+            transformed
         }
     }
     pub fn default_for_type(tile_type: TileType) -> Self {
@@ -60,6 +64,18 @@ impl Tile {
             tile_type,
             transform: DihedralElement::Id,
             offset: 0,
+        }
+    }
+    pub fn toggle_lights(self) -> Self {
+        let transform = if matches!(self.tile_type, TileType::YieldIntersection) {
+            self.transform * DihedralElement::Flip135
+        } else {
+            self.transform
+        };
+        Self {
+            transform,
+            offset: self.offset ^ 1,
+            ..self
         }
     }
 }

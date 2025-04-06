@@ -178,11 +178,9 @@ impl<'a> Transaction<'a> {
     }
     pub fn toggle_lights(&mut self, pos: TileCoord) {
         if let Some(tile) = self.course().get(&pos) {
-            if tile.tile_type.has_lights() {
-                let new_tile = Tile {
-                    offset: tile.offset ^ 1,
-                    ..*tile
-                };
+            if tile.tile_type.has_lights() || matches!(tile.tile_type, TileType::YieldIntersection)
+            {
+                let new_tile = tile.toggle_lights();
                 self.course_mut().insert_mut(pos, new_tile);
                 self.changed = true;
             }

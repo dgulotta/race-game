@@ -190,7 +190,7 @@ impl EditState {
                 Action::RotCW => tile.transform = DihedralElement::Rot90 * tile.transform,
                 Action::RotCCW => tile.transform = DihedralElement::Rot270 * tile.transform,
                 Action::Flip => tile.transform = DihedralElement::Flip0 * tile.transform,
-                Action::ToggleLights => tile.offset ^= 1,
+                Action::ToggleLights => *tile = tile.toggle_lights(),
                 Action::Delete => (),
                 _ => unreachable!(),
             },

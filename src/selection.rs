@@ -4,7 +4,7 @@ use notan::log::warn;
 use rustc_hash::FxHashSet;
 
 use crate::{
-    course::{bounding_rect, course_center, Course, CourseEdit, TileCoord},
+    course::{Course, CourseEdit, TileCoord, bounding_rect, course_center},
     direction::{DihedralElement, Isometry},
     tile::Tile,
 };
@@ -18,7 +18,7 @@ pub struct SelectState {
 pub struct DragData {
     pub anchor: TileCoord,
     pub transform: DihedralElement,
-    pub offset: u8,
+    pub toggle_lights: bool,
     pub external: Option<Course>,
 }
 
@@ -73,7 +73,7 @@ impl SelectState {
             self.drag = DragState::Dragging(DragData {
                 anchor: pos,
                 transform: DihedralElement::Id,
-                offset: 0,
+                toggle_lights: false,
                 external: None,
             });
         }
@@ -91,7 +91,7 @@ impl SelectState {
 
     pub fn toggle_lights(&mut self, course: &mut CourseEdit) {
         match &mut self.drag {
-            DragState::Dragging(drag) => drag.offset ^= 1,
+            DragState::Dragging(drag) => drag.toggle_lights = !drag.toggle_lights,
             DragState::NoDrag => {
                 let mut edit = course.edit();
                 for pos in &self.selection {
@@ -161,7 +161,7 @@ impl SelectState {
             drag: DragState::Dragging(DragData {
                 anchor: pos,
                 transform: DihedralElement::Id,
-                offset: 0,
+                toggle_lights: false,
                 external: Some(course),
             }),
         }
@@ -209,7 +209,7 @@ pub fn drag_tiles<'a>(
     DragIterBase::from_drag(selection, drag, course).map(move |(from_pos, tile)| {
         (
             isom * from_pos,
-            tile.apply_transform(drag.transform, drag.offset),
+            tile.apply_transform(drag.transform, drag.toggle_lights),
         )
     })
 }
