@@ -135,6 +135,27 @@ pub const fn rotation_for(from: Direction, to: Direction) -> DihedralElement {
     DihedralElement::from_repr(n as usize).unwrap()
 }
 
+pub const fn reflection_along(dir: Direction) -> DihedralElement {
+    let n = (((dir as usize) & 1) << 1) | 4;
+    DihedralElement::from_repr(n).unwrap()
+}
+
+pub fn trans_for_dirs(
+    from1: Direction,
+    from2: Direction,
+    to1: Direction,
+    to2: Direction,
+) -> DihedralElement {
+    let r = rotation_for(from1, to1);
+    if r * from2 == to2 {
+        r
+    } else {
+        let f = r * reflection_along(from1);
+        assert_eq!(f * from2, to2);
+        f
+    }
+}
+
 #[derive(PartialEq, Eq, Clone, Copy)]
 pub struct Isometry {
     pub dihedral: DihedralElement,

@@ -10,6 +10,7 @@ use notan::{
 use strum::IntoEnumIterator;
 
 use crate::{
+    combine::combine,
     direction::DihedralElement,
     input::Action,
     level::LevelData,
@@ -83,8 +84,13 @@ fn process_mouse(
                     if !in_gui {
                         let mut edit = state.course.edit();
                         for w in path.path().windows(2) {
-                            let (pos, tile) = track_tile(w[0], w[1]);
-                            edit.set(pos, tile);
+                            let (pos, add) = track_tile(w[0], w[1]);
+                            let combined = if let Some(orig) = edit.course().get(&pos) {
+                                combine(*orig, add, &state.level_data.banned)
+                            } else {
+                                add
+                            };
+                            edit.set(pos, combined);
                         }
                     }
                     path.clear();
@@ -247,6 +253,14 @@ fn draw_course_edit(
                 for p in path.path().windows(2) {
                     let (track_pos, tile) = track_tile(p[0], p[1]);
                     graphics.draw_tile(tile, track_pos).alpha(OVERLAY_ALPHA);
+                }
+                if path.path().is_empty() {
+                    if let Some(mpos) = mouse_coords_car(app, settings, offset) {
+                        graphics.draw_tile_boundary(mpos);
+                    }
+                } else {
+                    graphics.draw_tile_boundary(*path.path().first().unwrap());
+                    graphics.draw_tile_boundary(*path.path().last().unwrap());
                 }
             }
         }

@@ -164,7 +164,7 @@ impl<'a> Transaction<'a> {
             changed: false,
         }
     }
-    fn course(&self) -> &Course {
+    pub fn course(&self) -> &Course {
         &self.state.course
     }
     fn course_mut(&mut self) -> &mut Course {

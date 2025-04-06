@@ -1,11 +1,17 @@
 use strum::IntoEnumIterator;
 
 use crate::{
+    combine::combine_options,
     course::TileCoord,
-    direction::{DihedralElement, Direction, ROTATIONS, rotation_for},
+    direction::{
+        DihedralElement, Direction, ROTATIONS, reflection_along, rotation_for, trans_for_dirs,
+    },
     path::track_tile,
     save::courses_from_toml,
-    simulator::{CarCoord, Simulator, is_entrance, is_exit},
+    simulator::{
+        CarCoord, STRAIGHT_ENTRANCE, STRAIGHT_EXIT, Simulator, TURN_ENTRANCE, TURN_EXIT,
+        is_entrance, is_entrance_id, is_exit, is_exit_id,
+    },
     tile::{Tile, TileType},
     tracker::Tracker,
     ui::loader::load_levels,
@@ -13,6 +19,10 @@ use crate::{
 
 #[test]
 fn test_inverses() {
+    for d in Direction::iter() {
+        assert_eq!(d, d.opposite().opposite());
+        assert_eq!(d.opposite(), DihedralElement::Rot180 * d);
+    }
     for e in DihedralElement::iter() {
         assert_eq!(e * e.inverse(), DihedralElement::Id);
         assert_eq!(e.inverse() * e, DihedralElement::Id);
@@ -62,17 +72,42 @@ fn test_rotation_for() {
 }
 
 #[test]
+fn test_reflect_along() {
+    for d in Direction::iter() {
+        let e = reflection_along(d);
+        assert_eq!(e.sign(), -1);
+        assert_eq!(d, e * d);
+    }
+}
+
+#[test]
+fn test_trans_for_dirs() {
+    for from1 in Direction::iter() {
+        for r in [DihedralElement::Rot90, DihedralElement::Rot270] {
+            let from2 = r * from1;
+            for e in DihedralElement::iter() {
+                let f = trans_for_dirs(from1, from2, e * from1, e * from2);
+                assert_eq!(e, f);
+            }
+        }
+    }
+}
+
+#[test]
 fn test_track_tile() {
     let pos = TileCoord(0, 0);
     let cpos: CarCoord = pos.into();
-    let straight_start = Direction::Down;
-    let straight_end = Direction::Up;
-    let turn_start = Direction::Down;
-    let turn_end = Direction::Left;
-    assert!(is_entrance(TileType::Straight, straight_start.opposite()));
-    assert!(is_exit(TileType::Straight, straight_end));
-    assert!(is_entrance(TileType::Turn, turn_start.opposite()));
-    assert!(is_exit(TileType::Turn, turn_end));
+    let straight_start = STRAIGHT_ENTRANCE.opposite();
+    let straight_end = STRAIGHT_EXIT;
+    let turn_start = TURN_ENTRANCE.opposite();
+    let turn_end = TURN_EXIT;
+    assert!(is_entrance_id(
+        TileType::Straight,
+        straight_start.opposite()
+    ));
+    assert!(is_exit_id(TileType::Straight, straight_end));
+    assert!(is_entrance_id(TileType::Turn, turn_start.opposite()));
+    assert!(is_exit_id(TileType::Turn, turn_end));
     for r in ROTATIONS {
         let p1 = cpos + r * straight_start;
         let p2 = cpos + r * straight_end;
@@ -122,6 +157,51 @@ fn test_solutions() {
                 }
             }
             assert_eq!(&lvl.finish, tracker.get_finishes());
+        }
+    }
+}
+
+#[test]
+fn test_entrance_exit() {
+    for t in TileType::iter() {
+        for d in Direction::iter() {
+            assert!(!(is_entrance_id(t, d.opposite()) && is_exit_id(t, d)));
+        }
+    }
+}
+
+#[test]
+fn test_combine() {
+    for tile1 in [TileType::Straight, TileType::Turn] {
+        for tile2 in TileType::iter() {
+            for tr1 in DihedralElement::iter() {
+                for tr2 in DihedralElement::iter() {
+                    let orig = Tile {
+                        tile_type: tile2,
+                        transform: tr2,
+                        offset: 0,
+                    };
+                    let add = Tile {
+                        tile_type: tile1,
+                        transform: tr1,
+                        offset: 0,
+                    };
+                    for combined in combine_options(orig, add) {
+                        for d in Direction::iter() {
+                            assert!(
+                                is_entrance(combined, d)
+                                    == (is_entrance(orig, d) && !is_exit(add, d.opposite()))
+                                        | is_entrance(add, d)
+                            );
+                            assert!(
+                                is_exit(combined, d)
+                                    == (is_exit(orig, d) && !is_entrance(add, d.opposite()))
+                                        | is_exit(add, d)
+                            );
+                        }
+                    }
+                }
+            }
         }
     }
 }

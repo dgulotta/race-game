@@ -11,7 +11,7 @@ pub static CAR_SCALE_RATIO: f32 = TILE_SIZE / 256.0;
 
 use super::loader::Resources;
 use crate::course::{Course, TileCoord};
-use crate::direction::{rotation_for, DihedralElement, Direction};
+use crate::direction::{DihedralElement, Direction, rotation_for};
 use crate::playback::{CarAnimation, CarPosF};
 use crate::simulator::{CarCoord, CarData};
 use crate::tile::Tile;
@@ -178,6 +178,19 @@ impl TileGraphics<'_> {
         let aff = Affine2::from_mat2_translation(m, pos);
         let mat: Mat3 = aff.into();
         self.draw_car_number_base(id, mat);
+    }
+
+    pub fn draw_tile_boundary(&mut self, pos: CarCoord) {
+        let (d1, d2) = if pos.0 & 1 == 0 {
+            (Direction::Left, Direction::Right)
+        } else {
+            (Direction::Up, Direction::Down)
+        };
+        let p1 = self.car_to_screen(pos + d1);
+        let p2 = self.car_to_screen(pos + d2);
+        self.draw
+            .line((p1.x, p1.y), (p2.x, p2.y))
+            .color(Color::BLACK);
     }
 }
 

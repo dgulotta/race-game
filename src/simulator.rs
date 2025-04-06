@@ -111,7 +111,12 @@ fn random_8(n: u8) -> bool {
     thread_rng().gen_ratio(n as u32, 8)
 }
 
-pub const fn is_entrance(tile: TileType, car_dir: Direction) -> bool {
+pub const STRAIGHT_ENTRANCE: Direction = Direction::Up;
+pub const STRAIGHT_EXIT: Direction = Direction::Up;
+pub const TURN_ENTRANCE: Direction = Direction::Up;
+pub const TURN_EXIT: Direction = Direction::Left;
+
+pub const fn is_entrance_id(tile: TileType, car_dir: Direction) -> bool {
     match tile {
         TileType::Straight
         | TileType::Turn
@@ -124,7 +129,11 @@ pub const fn is_entrance(tile: TileType, car_dir: Direction) -> bool {
     }
 }
 
-pub const fn is_exit(tile: TileType, car_dir: Direction) -> bool {
+pub const fn is_entrance(tile: Tile, car_dir: Direction) -> bool {
+    is_entrance_id(tile.tile_type, tile.transform.apply_inverse(car_dir))
+}
+
+pub const fn is_exit_id(tile: TileType, car_dir: Direction) -> bool {
     match tile {
         TileType::Straight | TileType::Finish | TileType::Merge => matches!(car_dir, Direction::Up),
         TileType::Turn => matches!(car_dir, Direction::Left),
@@ -133,6 +142,10 @@ pub const fn is_exit(tile: TileType, car_dir: Direction) -> bool {
             matches!(car_dir, Direction::Up | Direction::Left)
         }
     }
+}
+
+pub const fn is_exit(tile: Tile, car_dir: Direction) -> bool {
+    is_exit_id(tile.tile_type, tile.transform.apply_inverse(car_dir))
 }
 
 impl<'a> RoundRunner<'a> {
@@ -352,8 +365,7 @@ impl Simulator {
 
     fn check_finish(&self, pos: CarCoord, car_dir: Direction) -> CarStatus {
         if let Some(tile) = self.tile_at(pos + car_dir) {
-            let car_dir_norm = tile.transform.apply_inverse(car_dir);
-            if is_entrance(tile.tile_type, car_dir_norm) {
+            if is_entrance(*tile, car_dir) {
                 if tile.tile_type == TileType::Finish {
                     CarStatus::Finished
                 } else {

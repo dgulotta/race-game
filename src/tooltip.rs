@@ -1,8 +1,8 @@
 use crate::{
     course::{Course, TileCoord},
     direction::{DihedralElement, Direction, ROTATIONS},
-    playback::{animations, CarAnimation},
-    simulator::{is_entrance, is_exit, CarData, SimEvent, Simulator, SpawnPolicy},
+    playback::{CarAnimation, animations},
+    simulator::{CarData, SimEvent, Simulator, SpawnPolicy, is_entrance_id, is_exit_id},
     tile::{Tile, TileType},
 };
 use std::time::Duration;
@@ -28,7 +28,7 @@ fn course_for(tile: TileType) -> Course {
     );
     for rot in ROTATIONS {
         let dir = rot * Direction::Up;
-        if is_entrance(tile, dir) {
+        if is_entrance_id(tile, dir) {
             course.insert_mut(
                 orig - dir,
                 Tile {
@@ -46,7 +46,7 @@ fn course_for(tile: TileType) -> Course {
                 },
             );
         }
-        if is_exit(tile, dir) {
+        if is_exit_id(tile, dir) {
             course.insert_mut(
                 orig + dir,
                 Tile {
