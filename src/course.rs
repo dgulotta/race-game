@@ -2,7 +2,7 @@ use notan::math::Vec2;
 use serde::{Deserialize, Serialize};
 use takeable::Takeable;
 
-use crate::direction::{DihedralElement, Direction};
+use crate::direction::Direction;
 use crate::level::LevelData;
 use crate::save::save_course;
 use crate::tile::{Tile, TileType};
@@ -176,20 +176,13 @@ impl<'a> Transaction<'a> {
     pub fn set(&mut self, pos: TileCoord, tile: Tile) {
         self.changed |= self.state.set(pos, tile);
     }
-    pub fn toggle_lights(&mut self, pos: TileCoord) {
-        if let Some(tile) = self.course().get(&pos) {
-            if tile.tile_type.has_lights() || matches!(tile.tile_type, TileType::YieldIntersection)
-            {
-                let new_tile = tile.toggle_lights();
+    pub fn modify(&mut self, pos: TileCoord, f: impl FnOnce(Tile) -> Tile) {
+        if let Some(tile) = self.course().get(&pos).copied() {
+            let new_tile = f(tile);
+            if new_tile != tile {
                 self.course_mut().insert_mut(pos, new_tile);
                 self.changed = true;
             }
-        }
-    }
-    pub fn apply_transform(&mut self, pos: TileCoord, trans: DihedralElement) {
-        if let Some(tile) = self.course_mut().get_mut(&pos) {
-            tile.transform = trans * tile.transform;
-            self.changed = true;
         }
     }
     pub fn commit(self) {}

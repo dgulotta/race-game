@@ -27,6 +27,7 @@ static KEYS_1: &[(Action, KeyCode)] = &[
     (Action::RotCCW, KeyCode::E),
     (Action::Flip, KeyCode::F),
     (Action::ToggleLights, KeyCode::D),
+    (Action::Reverse, KeyCode::S),
     (Action::SelectModify, KeyCode::Escape),
     (Action::SelectErase, KeyCode::Key0),
 ];

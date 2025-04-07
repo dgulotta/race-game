@@ -256,11 +256,18 @@ fn draw_course_edit(
                 }
                 if path.path().is_empty() {
                     if let Some(mpos) = mouse_coords_car(app, settings, offset) {
-                        graphics.draw_tile_boundary(mpos);
+                        graphics.draw_tile_boundary_arrows(mpos);
                     }
                 } else {
-                    graphics.draw_tile_boundary(*path.path().first().unwrap());
-                    graphics.draw_tile_boundary(*path.path().last().unwrap());
+                    let p = path.path();
+                    if p.len() == 1 {
+                        graphics.draw_tile_boundary_arrows(p[0]);
+                    } else {
+                        graphics.draw_tile_boundary(p[0]);
+                        let last = p[p.len() - 1];
+                        let track_pos = track_tile(p[p.len() - 2], last).0;
+                        graphics.draw_tile_boundary_arrow(last, track_pos);
+                    }
                 }
             }
         }

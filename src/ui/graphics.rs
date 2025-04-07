@@ -36,13 +36,13 @@ impl TileGraphics<'_> {
         0.5 * self.tile_size() * Vec2::new(pos.x + 1.0, pos.y + 1.0)
     }
 
-    fn tile_to_screen(&self, value: TileCoord) -> Vec2 {
+    fn tile_ul_to_screen(&self, value: TileCoord) -> Vec2 {
         self.tile_size() * Vec2::new(value.0 as f32, value.1 as f32)
     }
 
     pub fn transform_for(&self, transform: DihedralElement, pos: TileCoord) -> Mat3 {
         let m = matrix_for_dihedral(transform);
-        let translation: Vec2 = self.tile_to_screen(pos);
+        let translation: Vec2 = self.tile_ul_to_screen(pos);
         let hsz = 0.5 * self.tile_size();
         let mid = Vec2::new(hsz, hsz);
         let v = translation + mid - m * mid;
@@ -181,16 +181,44 @@ impl TileGraphics<'_> {
     }
 
     pub fn draw_tile_boundary(&mut self, pos: CarCoord) {
-        let (d1, d2) = if pos.0 & 1 == 0 {
-            (Direction::Left, Direction::Right)
+        let d = if pos.0 & 1 == 0 {
+            Direction::Left
         } else {
-            (Direction::Up, Direction::Down)
+            Direction::Up
         };
-        let p1 = self.car_to_screen(pos + d1);
-        let p2 = self.car_to_screen(pos + d2);
+        let p1 = self.car_to_screen(pos + d);
+        let p2 = self.car_to_screen(pos + d.opposite());
         self.draw
             .line((p1.x, p1.y), (p2.x, p2.y))
             .color(Color::BLACK);
+    }
+
+    fn draw_tile_boundary_arrow_car_coord(&mut self, pos: CarCoord, adj: CarCoord) {
+        let base = self.car_to_screen(pos);
+        let out = self.car_to_screen(adj) - base;
+        let rot = Vec2::new(-out.y, out.x);
+        let t1 = base - 0.2 * out;
+        let t2 = base - 0.05 * out + 0.25 * rot;
+        let t3 = base - 0.05 * out - 0.25 * rot;
+        self.draw
+            .triangle((t1.x, t1.y), (t2.x, t2.y), (t3.x, t3.y))
+            .color(Color::BLACK);
+    }
+
+    pub fn draw_tile_boundary_arrow(&mut self, pos: CarCoord, adj: TileCoord) {
+        self.draw_tile_boundary(pos);
+        self.draw_tile_boundary_arrow_car_coord(pos, adj.into())
+    }
+
+    pub fn draw_tile_boundary_arrows(&mut self, pos: CarCoord) {
+        self.draw_tile_boundary(pos);
+        let d = if pos.0 & 1 == 0 {
+            Direction::Up
+        } else {
+            Direction::Left
+        };
+        self.draw_tile_boundary_arrow_car_coord(pos, pos + d);
+        self.draw_tile_boundary_arrow_car_coord(pos, pos + d.opposite());
     }
 }
 

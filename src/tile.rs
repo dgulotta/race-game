@@ -38,6 +38,16 @@ impl TileType {
             LightForwardTurn => "Straight/turn with lights",
         }
     }
+
+    pub const fn reverse_trans(self) -> DihedralElement {
+        use TileType::*;
+        match self {
+            Straight | Finish | LightForwardTurn | Merge => DihedralElement::Flip90,
+            LightIntersection | YieldIntersection => DihedralElement::Rot180,
+            Turn => DihedralElement::Flip45,
+            LightTurns => DihedralElement::Id,
+        }
+    }
 }
 
 #[derive(Copy, Clone, Serialize, Deserialize, PartialEq, Eq, Debug)]
@@ -48,15 +58,10 @@ pub struct Tile {
 }
 
 impl Tile {
-    pub fn apply_transform(self, transform: DihedralElement, toggle_lights: bool) -> Self {
-        let transformed = Self {
+    pub fn apply_transform(self, transform: DihedralElement) -> Self {
+        Self {
             transform: transform * self.transform,
             ..self
-        };
-        if toggle_lights {
-            transformed.toggle_lights()
-        } else {
-            transformed
         }
     }
     pub fn default_for_type(tile_type: TileType) -> Self {
@@ -77,5 +82,20 @@ impl Tile {
             offset: self.offset ^ 1,
             ..self
         }
+    }
+
+    pub fn toggle_lights_if(self, toggle: bool) -> Self {
+        if toggle { self.toggle_lights() } else { self }
+    }
+
+    pub fn reverse(self) -> Self {
+        Self {
+            transform: self.transform * self.tile_type.reverse_trans(),
+            ..self
+        }
+    }
+
+    pub fn reverse_if(self, toggle: bool) -> Self {
+        if toggle { self.reverse() } else { self }
     }
 }

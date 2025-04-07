@@ -19,6 +19,7 @@ pub struct DragData {
     pub anchor: TileCoord,
     pub transform: DihedralElement,
     pub toggle_lights: bool,
+    pub reverse: bool,
     pub external: Option<Course>,
 }
 
@@ -74,6 +75,7 @@ impl SelectState {
                 anchor: pos,
                 transform: DihedralElement::Id,
                 toggle_lights: false,
+                reverse: false,
                 external: None,
             });
         }
@@ -95,7 +97,7 @@ impl SelectState {
             DragState::NoDrag => {
                 let mut edit = course.edit();
                 for pos in &self.selection {
-                    edit.toggle_lights(*pos);
+                    edit.modify(*pos, |tile| tile.toggle_lights());
                 }
             }
             _ => (),
@@ -112,6 +114,18 @@ impl SelectState {
         }
     }
 
+    pub fn reverse_track(&mut self, course: &mut CourseEdit) {
+        match &mut self.drag {
+            DragState::Dragging(drag) => drag.reverse = !drag.reverse,
+            _ => {
+                let mut edit = course.edit();
+                for pos in &self.selection {
+                    edit.modify(*pos, |tile| tile.reverse());
+                }
+            }
+        }
+    }
+
     pub fn apply_transform(&mut self, course: &mut CourseEdit, trans: DihedralElement) {
         match &mut self.drag {
             DragState::Dragging(drag) => drag.transform = trans * (drag.transform),
@@ -119,7 +133,7 @@ impl SelectState {
                 if self.selection.len() == 1 {
                     let mut edit = course.edit();
                     for pos in &self.selection {
-                        edit.apply_transform(*pos, trans);
+                        edit.modify(*pos, |tile| tile.apply_transform(trans));
                     }
                 }
             }
@@ -162,6 +176,7 @@ impl SelectState {
                 anchor: pos,
                 transform: DihedralElement::Id,
                 toggle_lights: false,
+                reverse: false,
                 external: Some(course),
             }),
         }
@@ -209,7 +224,9 @@ pub fn drag_tiles<'a>(
     DragIterBase::from_drag(selection, drag, course).map(move |(from_pos, tile)| {
         (
             isom * from_pos,
-            tile.apply_transform(drag.transform, drag.toggle_lights),
+            tile.apply_transform(drag.transform)
+                .toggle_lights_if(drag.toggle_lights)
+                .reverse_if(drag.reverse),
         )
     })
 }

@@ -172,6 +172,7 @@ impl EditState {
             | Action::RotCCW
             | Action::Flip
             | Action::ToggleLights
+            | Action::Reverse
             | Action::Delete => self.process_transform(action),
             Action::SelectModify => self.track_selection = Default::default(),
             Action::SelectErase => self.track_selection = TrackSelection::Erase,
@@ -191,6 +192,7 @@ impl EditState {
                 Action::RotCCW => tile.transform = DihedralElement::Rot270 * tile.transform,
                 Action::Flip => tile.transform = DihedralElement::Flip0 * tile.transform,
                 Action::ToggleLights => *tile = tile.toggle_lights(),
+                Action::Reverse => *tile = tile.reverse(),
                 Action::Delete => (),
                 _ => unreachable!(),
             },
@@ -207,6 +209,7 @@ impl EditState {
                 Action::ToggleLights => {
                     selection.toggle_lights(&mut self.course);
                 }
+                Action::Reverse => selection.reverse_track(&mut self.course),
                 Action::Delete => selection.delete(&mut self.course),
                 _ => unreachable!(),
             },
