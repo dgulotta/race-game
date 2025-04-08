@@ -21,6 +21,40 @@ fn is_boundary(t: TileCoord, p: CarCoord) -> bool {
     p.distance_squared(c) == 1
 }
 
+struct PathIter {
+    start: CarCoord,
+    end: CarCoord,
+}
+
+impl Iterator for PathIter {
+    type Item = CarCoord;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.start == self.end {
+            None
+        } else {
+            let dx = self.end.0 - self.start.0;
+            let dy = self.end.1 - self.start.1;
+            self.start = if self.start.0 & 1 == 0 {
+                match dy {
+                    ..=-2 => CarCoord(self.start.0, self.start.1 - 2),
+                    -1 | 1 => CarCoord(self.start.0 + dx.signum(), self.end.1),
+                    0 => return None,
+                    2.. => CarCoord(self.start.0, self.start.1 + 2),
+                }
+            } else {
+                match dx {
+                    ..=-2 => CarCoord(self.start.0 - 2, self.start.1),
+                    -1 | 1 => CarCoord(self.end.0, self.start.1 + dy.signum()),
+                    0 => return None,
+                    2.. => CarCoord(self.start.0 + 2, self.start.1),
+                }
+            };
+            Some(self.start)
+        }
+    }
+}
+
 fn common_tile(p1: CarCoord, p2: CarCoord) -> Option<TileCoord> {
     let x = p1.0 + p2.0;
     let y = p1.1 + p2.1;
@@ -90,19 +124,24 @@ impl Path {
     }
 
     pub fn add(&mut self, pos: CarCoord) {
-        if let Some(last) = self.0.last().copied() {
-            if let Some(t1) = common_tile(last, pos) {
+        if let Some(old_last) = self.0.last().copied() {
+            let it = PathIter {
+                start: old_last,
+                end: pos,
+            };
+            for new in it {
                 if let Some(pvs) = self.second_last() {
-                    if pvs == pos {
+                    let last = *self.0.last().unwrap();
+                    if pvs == new {
                         self.0.pop();
-                    } else if common_tile(pvs, last) == Some(t1) {
+                    } else if common_tile(pvs, last) == common_tile(last, new) {
                         self.0.pop();
-                        self.0.push(pos);
+                        self.0.push(new);
                     } else {
-                        self.0.push(pos);
+                        self.0.push(new);
                     }
                 } else {
-                    self.0.push(pos);
+                    self.0.push(new);
                 }
             }
         } else {
