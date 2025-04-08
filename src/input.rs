@@ -45,7 +45,7 @@ impl Action {
             Self::ToggleLights => "Toggle lights",
             Self::Reverse => "Reverse",
             Self::SelectModify => "Select/Move",
-            Self::SelectPath => "Straight/Turns",
+            Self::SelectPath => "Draw paths",
             Self::SelectErase => "Clear",
             Self::SelectTile(t) => t.name(),
             Self::Scroll(d) => d.name(),
