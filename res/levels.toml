@@ -30,7 +30,7 @@ banned = ["YieldIntersection","LightIntersection"]
 name = "Level 4"
 cars = 12
 finish = [0, 2, 4, 6]
-tutorial = 3
+tutorial = 4
 banned = ["LightIntersection"]
 
 [[levels]]

@@ -339,17 +339,21 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
                 tutorial_text(
                     ctx,
                     &format!(
-                        "Press {} or {} to rotate the track before placing it.  Press {} to flip the track.\n\nClick the \u{1f5ae} button below to see more keybindings, or the \u{2699} button to change the keybindings.",
+                        "Press {} or {} to rotate the track before placing it.  Press {} to flip the track horizontally.  Press {} to reverse the track direction.\n\nClick the \u{1f5ae} button below to see more keybindings, or the \u{2699} button to change the keybindings.",
                         key_name(settings.keys[&Action::RotCCW]),
                         key_name(settings.keys[&Action::RotCW]),
-                        key_name(settings.keys[&Action::Flip])
+                        key_name(settings.keys[&Action::Flip]),
+                        key_name(settings.keys[&Action::Reverse]),
                     ),
                 );
+            } else if matches!(state.track_selection, TrackSelection::Path(_)) {
+                tutorial_text(ctx, "Click and drag to place track pieces.");
             } else {
-                tutorial_text(
-                    ctx,
-                    "The goal for this level is for the cars to finish the race in the same order that they started it.\n\nHover the mouse over the pieces of track in the top panel to see what they do.",
-                );
+                tutorial_window(ctx, |ui| {
+                    ui.label("The goal for this level is for the cars to finish the race in the same order that they started it.\n\nHover the mouse over the pieces of track in the top panel to see what they do.\n\nTo draw many pieces of track quickly, use this tool:");
+                    let img = egui::Image::new(res.path_icon).max_width(TILE_SIZE);
+                    ui.add(img);
+                });
             }
         }
         Some(2) => {
@@ -371,6 +375,20 @@ fn draw_tutorial(res: &Resources, settings: &Settings, state: &EditState, ctx: &
         }
         Some(3) => {
             tutorial_new_tiles(state, ctx);
+        }
+        Some(4) => {
+            if matches!(
+                state.track_selection.tile_type(),
+                Some(TileType::YieldIntersection)
+            ) {
+                tutorial_text(
+                    ctx,
+                    &format!(
+                        "The selected track does not have lights, but you can press {} to move the yield sign.",
+                        key_name(settings.keys[&Action::ToggleLights])
+                    ),
+                )
+            }
         }
         _ => (),
     }
