@@ -19,7 +19,7 @@ use strum::IntoEnumIterator;
 
 use super::{
     edit::key_window,
-    graphics::{get_draw_offset, TileGraphics, TILE_SIZE},
+    graphics::{TILE_SIZE, TileGraphics, get_draw_offset},
     input::check_key_press,
     loader::Resources,
     settings::Settings,
@@ -198,6 +198,7 @@ fn make_animation(
     res: &Resources,
     state: &RaceState,
     zoom: f32,
+    bg_color: &[f32; 3],
 ) -> Result<Vec<u8>, anyhow::Error> {
     let mut out = Cursor::new(Vec::new());
     let course = state.sim.get_course();
@@ -227,6 +228,7 @@ fn make_animation(
         let mut graphics = TileGraphics {
             res,
             zoom,
+            bg_color,
             draw: texture.create_draw(),
             round,
         };
@@ -270,7 +272,7 @@ pub fn show_success(
                 }
                 if ui.button("Save replay").clicked() {
                     let zoom = (app.window().dpi() as f32) * settings.zoom.tile_size;
-                    if let Ok(bytes) = make_animation(gfx, res, state, zoom) {
+                    if let Ok(bytes) = make_animation(gfx, res, state, zoom, &settings.bg_color) {
                         let _ = state.exporter.set_save_action(
                             Box::new(move |w| {
                                 w.write_all(&bytes)?;
@@ -364,6 +366,7 @@ pub fn draw_race(
     let mut graphics = TileGraphics {
         res,
         zoom: settings.zoom.tile_size,
+        bg_color: &settings.bg_color,
         draw: gfx.create_draw(),
         round,
     };

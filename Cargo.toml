@@ -5,7 +5,7 @@ edition = "2024"
 license = "GPL-3.0-only AND CC-BY-SA-4.0"
 
 [dependencies]
-notan = { version = "0.13.0", features = ["egui","extra","serde"]}
+notan = { git = "https://github.com/dgulotta/notan.git", features = ["egui","extra","serde"], branch = "egui-serde"}
 serde = { version = "1.0.214", features = ["rc"] }
 toml = "0.8.19"
 strum = { version ="0.26.3", features = ["derive"] }

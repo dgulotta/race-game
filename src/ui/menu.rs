@@ -1,6 +1,6 @@
 use notan::{
     app::{App, Color, Graphics, Plugins},
-    egui::{self, Context, EguiPluginSugar, Grid, RichText, Ui},
+    egui::{self, Context, EguiPluginSugar, Grid, Rgba, RichText, Ui},
 };
 
 use super::{
@@ -46,6 +46,14 @@ fn display_settings(
 ) {
     let old_font_size = settings.zoom.font_size;
     ui.checkbox(&mut settings.smooth_animation, "Smooth animation");
+    ui.horizontal(|ui| {
+        ui.label("Track background");
+        ui.color_edit_button_rgb(&mut settings.bg_color);
+    });
+    ui.horizontal(|ui| {
+        ui.label("UI theme:");
+        settings.ui_theme.radio_buttons(ui);
+    });
     if cfg!(not(target_arch = "wasm32")) {
         let mut full = app.window().is_fullscreen();
         ui.checkbox(&mut full, "Fullscreen");
@@ -72,7 +80,12 @@ fn display_settings(
     */
     let tile_size = settings.tile_size() / old_font_size;
     let img = egui::Image::new(res.sample)
-        .fit_to_exact_size(egui::Vec2::new(3.0 * tile_size, 2.0 * tile_size));
+        .fit_to_exact_size(egui::Vec2::new(3.0 * tile_size, 2.0 * tile_size))
+        .bg_fill(Rgba::from_rgb(
+            settings.bg_color[0],
+            settings.bg_color[1],
+            settings.bg_color[2],
+        ));
     ui.add(img);
 }
 
@@ -139,13 +152,15 @@ pub fn settings_menu_display(
     temp_window: &mut ZoomSettings,
     ctx: &Context,
 ) -> bool {
-    central_panel(ctx, egui::Align::Min, |ui| {
+    let r = central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Display settings");
         ui.add_space(20.0);
         display_settings(app, res, settings, temp_window, ui);
         ui.add_space(20.0);
         ui.button(RichText::new("Back").heading()).clicked()
-    })
+    });
+    ctx.set_theme(settings.ui_theme);
+    r
 }
 
 pub fn settings_menu_help(settings: &mut Settings, state: &mut SettingsState, ctx: &Context) {

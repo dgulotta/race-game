@@ -19,6 +19,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c71b1793ee61086797f5c80b6efa2b8ffa6d5dd703f118545808a7f2e27f7046"
 
 [[package]]
+name = "accesskit"
+version = "0.17.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d3d3b8f9bae46a948369bc4a03e815d4ed6d616bd00de4051133a5019dc31c5a"
+dependencies = [
+ "enumn",
+ "serde",
+]
+
+[[package]]
 name = "adler2"
 version = "2.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -32,6 +42,7 @@ checksum = "e89da841a80418a9b391ebaea17f5c112ffaaa96f621d2c285b5174da76b9011"
 dependencies = [
  "cfg-if",
  "once_cell",
+ "serde",
  "version_check",
  "zerocopy",
 ]
@@ -558,6 +569,7 @@ checksum = "878e9005799dd739e5d5d89ff7480491c12d0af571d44399bcaefa1ee172dd76"
 dependencies = [
  "bytemuck",
  "emath",
+ "serde",
 ]
 
 [[package]]
@@ -566,12 +578,14 @@ version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "7d2768eaa6d5c80a6e2a008da1f0e062dff3c83eb2b28605ea2d0732d46e74d6"
 dependencies = [
+ "accesskit",
  "ahash",
  "bitflags 2.6.0",
  "emath",
  "epaint",
  "nohash-hasher",
  "profiling",
+ "serde",
 ]
 
 [[package]]
@@ -600,6 +614,7 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "55b7b6be5ad1d247f11738b0e4699d9c20005ed366f2c29f5ec1f8e1de180bc2"
 dependencies = [
  "bytemuck",
+ "serde",
 ]
 
 [[package]]
@@ -624,6 +639,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "enumn"
+version = "0.1.14"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "2f9ed6b3789237c8a0c1c505af1c7eb2c560df6186f01b098c3a1064ea532f38"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn 2.0.98",
+]
+
+[[package]]
 name = "epaint"
 version = "0.31.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -638,6 +664,7 @@ dependencies = [
  "nohash-hasher",
  "parking_lot",
  "profiling",
+ "serde",
 ]
 
 [[package]]
@@ -1345,8 +1372,7 @@ checksum = "2bf50223579dc7cdcfb3bfcacf7069ff68243f8c363f62ffa99cf000a6b9c451"
 [[package]]
 name = "notan"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "608883b719ac6c0ef018f6a4c100e1fbf1e9eb6c113dce8569df9c1e7952a1cc"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "notan_app",
  "notan_backend",
@@ -1368,8 +1394,7 @@ dependencies = [
 [[package]]
 name = "notan_app"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "68f0cb770ce5a65dd37c8c92f771cff50c92752a817726fbbaf41af2317be70d"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "downcast-rs 2.0.1",
  "futures",
@@ -1389,8 +1414,7 @@ dependencies = [
 [[package]]
 name = "notan_backend"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4dccdbd960722eb046fe2ffbe232c8425862cef0420198ed938d3caf0555eb69"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "notan_web",
  "notan_winit",
@@ -1399,8 +1423,7 @@ dependencies = [
 [[package]]
 name = "notan_core"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5eb4745290b047b2a90dcf5b5bc47bbb1ebe3cebc85ec4ec79fa8fbd06b0849e"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "serde",
 ]
@@ -1408,8 +1431,7 @@ dependencies = [
 [[package]]
 name = "notan_draw"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ed0106b965edd1eceaebd8833e212fa99dcf194adfaf0ac8c14cf7f19276b9a9"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "log",
  "lyon",
@@ -1426,8 +1448,7 @@ dependencies = [
 [[package]]
 name = "notan_egui"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b920114842a07aa1466b9e59fe4239b8879c12460f0db128385d6569e4435be5"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "bytemuck",
  "egui",
@@ -1440,8 +1461,7 @@ dependencies = [
 [[package]]
 name = "notan_extra"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e77b34a42e626c4647fde570cb4b9ccf4df17e88cb41b7a2a75fba6fd84f0f58"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "notan_app",
  "spin_sleep",
@@ -1450,8 +1470,7 @@ dependencies = [
 [[package]]
 name = "notan_glow"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "ac93a13c453acba121061520ee9243a21135aff817e8e7abd648ea366623c79c"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "bytemuck",
  "glow",
@@ -1467,8 +1486,7 @@ dependencies = [
 [[package]]
 name = "notan_glyph"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6a7170f546e48985e8a6fb35cb154030dd80693258252c0ef13c678fe4c12d06"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "bytemuck",
  "glyph_brush",
@@ -1482,8 +1500,7 @@ dependencies = [
 [[package]]
 name = "notan_graphics"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e77098283948c0d9d5e6aecd7466c12b37356a3e8677a337fa734ebc4f35b8cd"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "bytemuck",
  "crevice_notan",
@@ -1497,8 +1514,7 @@ dependencies = [
 [[package]]
 name = "notan_input"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a899c6c74b2b6576f6004cac2dc95ccb360293a5886877e4b355331a0f18d10f"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "hashbrown",
  "log",
@@ -1510,8 +1526,7 @@ dependencies = [
 [[package]]
 name = "notan_log"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "84a1c56f81a28f51885e3df6fae32ee583c05357d606a0509e5313e4f41e60c1"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "console_log",
  "fern",
@@ -1525,8 +1540,7 @@ dependencies = [
 [[package]]
 name = "notan_macro"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "626464c62edaa22b65722f720fb30cd99c440105e14706afb41b071cf5962072"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "cfg_aliases 0.2.1",
  "glsl-to-spirv",
@@ -1540,8 +1554,7 @@ dependencies = [
 [[package]]
 name = "notan_math"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7a934cb4f1eb992884fc5d90e3a5201926a88101e273bf832f28dbabb64971f1"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "glam",
  "serde",
@@ -1550,8 +1563,7 @@ dependencies = [
 [[package]]
 name = "notan_random"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3ca7c5cf2f44ec403e1c04dcf57dcca2f4b98957a3a9acb62cc102187dc4828a"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "getrandom",
  "rand",
@@ -1561,8 +1573,7 @@ dependencies = [
 [[package]]
 name = "notan_text"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d7c10779cc63859bd55ee5b7f67cbcdb5a9d078f790985a9ab7509a0cc95c782"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "hashbrown",
  "lazy_static",
@@ -1577,8 +1588,7 @@ dependencies = [
 [[package]]
 name = "notan_utils"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89451249b76807c2ca82f79b9be617f431d33df3e35b6f001c8fc83f01d83ea6"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "instant",
  "log",
@@ -1587,8 +1597,7 @@ dependencies = [
 [[package]]
 name = "notan_web"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "90af77376b5ba11ab881978981295f7735583181438ce2d54e2ba2eb588e6511"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "console_error_panic_hook",
  "js-sys",
@@ -1605,8 +1614,7 @@ dependencies = [
 [[package]]
 name = "notan_winit"
 version = "0.13.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "8040ebbff58455d9fbc12b70cbdc22419293a49bec9bb4eb761386ea4bd89538"
+source = "git+https://github.com/dgulotta/notan.git?branch=egui-serde#c18882c5ebc58ab923da33a21b56ab4842608f47"
 dependencies = [
  "glutin",
  "glutin-winit",

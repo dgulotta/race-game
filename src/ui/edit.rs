@@ -211,6 +211,7 @@ fn draw_course_edit(
     let mut graphics = TileGraphics {
         res,
         zoom: settings.zoom.tile_size,
+        bg_color: &settings.bg_color,
         draw: gfx.create_draw(),
         round: 1,
     };
@@ -516,6 +517,7 @@ pub fn draw_edit(
         let mut graphics = TileGraphics {
             res,
             zoom: settings.zoom.tile_size,
+            bg_color: &settings.bg_color,
             draw: create_draw_masked(gfx, &tool_area.area),
             round,
         };

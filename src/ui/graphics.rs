@@ -19,6 +19,7 @@ use crate::tile::Tile;
 pub struct TileGraphics<'a> {
     pub res: &'a Resources,
     pub zoom: f32,
+    pub bg_color: &'a [f32; 3],
     pub draw: Draw,
     pub round: usize,
 }
@@ -94,7 +95,11 @@ impl TileGraphics<'_> {
     }
 
     pub fn draw_course(&mut self, course: &Course) {
-        self.draw.clear(Color::WHITE);
+        self.draw.clear(Color::from_rgb(
+            self.bg_color[0],
+            self.bg_color[1],
+            self.bg_color[2],
+        ));
         for (pos, tile) in course {
             self.draw_tile(*tile, *pos);
         }

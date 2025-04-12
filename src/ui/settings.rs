@@ -1,7 +1,7 @@
 use crate::{direction::Direction, input::Action, tile::TileType};
 
 use indexmap::IndexMap;
-use notan::prelude::KeyCode;
+use notan::{egui, prelude::KeyCode};
 use serde::{Deserialize, Deserializer, Serialize};
 use serde_default::DefaultFromSerde;
 use strum::IntoEnumIterator;
@@ -77,6 +77,14 @@ const fn true_fn() -> bool {
     true
 }
 
+const fn default_theme() -> egui::ThemePreference {
+    egui::ThemePreference::System
+}
+
+const fn default_bg_color() -> [f32; 3] {
+    [1.0, 1.0, 1.0]
+}
+
 #[derive(Clone, Serialize, Deserialize, DefaultFromSerde)]
 pub struct ZoomSettings {
     #[serde(default = "one")]
@@ -100,6 +108,10 @@ pub struct Settings {
     pub smooth_animation: bool,
     #[serde(default)]
     pub zoom: ZoomSettings,
+    #[serde(default = "default_theme")]
+    pub ui_theme: egui::ThemePreference,
+    #[serde(default = "default_bg_color")]
+    pub bg_color: [f32; 3],
 }
 
 impl Settings {
