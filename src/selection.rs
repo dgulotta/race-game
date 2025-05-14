@@ -1,7 +1,7 @@
 use std::ops::RangeInclusive;
 
+use hashbrown::HashSet;
 use notan::log::warn;
-use rustc_hash::FxHashSet;
 
 use crate::{
     course::{Course, CourseEdit, TileCoord, bounding_rect, course_center},
@@ -11,7 +11,7 @@ use crate::{
 
 #[derive(Default)]
 pub struct SelectState {
-    pub selection: FxHashSet<TileCoord>,
+    pub selection: HashSet<TileCoord>,
     pub drag: DragState,
 }
 
@@ -154,7 +154,7 @@ impl SelectState {
         let old_course = course.get_course().clone();
         let mut edit = course.edit();
         let mut new_selection =
-            FxHashSet::with_capacity_and_hasher(self.selection.len(), Default::default());
+            HashSet::with_capacity_and_hasher(self.selection.len(), Default::default());
         for &pos in &self.selection {
             if !self.selection.contains(&isom.apply_inverse(pos)) {
                 edit.remove(pos);
@@ -183,7 +183,7 @@ impl SelectState {
     }
 }
 
-type InternalIterator<'a> = <&'a FxHashSet<TileCoord> as IntoIterator>::IntoIter;
+type InternalIterator<'a> = <&'a HashSet<TileCoord> as IntoIterator>::IntoIter;
 type ExternalIterator<'a> = <&'a Course as IntoIterator>::IntoIter;
 
 enum DragIterBase<'a> {
@@ -203,7 +203,7 @@ impl Iterator for DragIterBase<'_> {
 
 impl<'a> DragIterBase<'a> {
     fn from_drag(
-        selection: &'a FxHashSet<TileCoord>,
+        selection: &'a HashSet<TileCoord>,
         drag: &'a DragData,
         course: &'a Course,
     ) -> Self {
@@ -215,7 +215,7 @@ impl<'a> DragIterBase<'a> {
 }
 
 pub fn drag_tiles<'a>(
-    selection: &'a FxHashSet<TileCoord>,
+    selection: &'a HashSet<TileCoord>,
     drag: &'a DragData,
     course: &'a Course,
     pos: TileCoord,

@@ -6,7 +6,7 @@ use crate::tile::{Tile, TileType};
 use core::ops::{Add, Sub};
 use std::vec::Drain;
 
-type HashMap<K, V> = rustc_hash::FxHashMap<K, V>;
+use hashbrown::HashMap;
 
 static MAX_ROUNDS: usize = 1000;
 

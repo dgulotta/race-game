@@ -14,7 +14,7 @@ pub type Course = rpds::HashTrieMap<
     TileCoord,
     Tile,
     archery::shared_pointer::kind::RcK,
-    rustc_hash::FxBuildHasher,
+    hashbrown::DefaultHashBuilder,
 >;
 
 #[derive(Clone, Copy, Eq, PartialEq, Hash, Serialize, Deserialize, Debug)]
