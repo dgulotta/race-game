@@ -31,14 +31,16 @@ pub fn check_key_press(app: &App, settings: &Settings, key: Action) -> bool {
 }
 
 pub fn key_name(code: KeyCode) -> String {
-    let n = code as u32;
     match code {
-        _ if (0..=8).contains(&n) => (n + 1).to_string(),
-        KeyCode::Key0 => 0.to_string(),
-        KeyCode::Back => "Backspace".to_string(),
+        KeyCode::Escape => "Esc".to_string(),
         KeyCode::Comma => ",".to_string(),
         KeyCode::Period => ".".to_string(),
-        KeyCode::Escape => "Esc".to_string(),
-        _ => format!("{:?}", code),
+        _ => {
+            let name = format!("{:?}", code);
+            name.trim_start_matches("Arrow")
+                .trim_start_matches("Digit")
+                .trim_start_matches("Key")
+                .to_string()
+        }
     }
 }

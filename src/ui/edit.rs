@@ -66,8 +66,8 @@ fn process_mouse(
                 }
                 TrackSelection::Modify(select) => {
                     if app.mouse.left_was_pressed() {
-                        let retain = app.keyboard.is_down(KeyCode::LShift)
-                            || app.keyboard.is_down(KeyCode::RShift);
+                        let retain = app.keyboard.is_down(KeyCode::ShiftLeft)
+                            || app.keyboard.is_down(KeyCode::ShiftRight);
                         select.click(pos, retain);
                     }
                 }
