@@ -18,7 +18,6 @@ use crate::{
     ui::{
         export::{FileExport, make_exporter},
         screen::Screen,
-        settings::ZoomSettings,
     },
 };
 
@@ -448,7 +447,7 @@ impl CustomSpecState {
 
 pub enum SettingsMenu {
     Main,
-    Display(ZoomSettings),
+    Display,
     Keys,
     Help,
     ChooseKey(Action),

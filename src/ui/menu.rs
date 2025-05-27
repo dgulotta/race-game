@@ -4,11 +4,7 @@ use notan::{
 };
 
 use super::{
-    graphics::TILE_SIZE,
-    gui::central_panel,
-    input::key_name,
-    loader::Resources,
-    settings::{Settings, ZoomSettings},
+    graphics::TILE_SIZE, gui::central_panel, input::key_name, loader::Resources, settings::Settings,
 };
 use crate::{
     input::Action,
@@ -37,13 +33,7 @@ fn size_combo(ui: &mut Ui, name: &str, value: &mut f32) {
         });
 }
 
-fn display_settings(
-    app: &mut App,
-    res: &Resources,
-    settings: &mut Settings,
-    _temp_zoom: &mut ZoomSettings,
-    ui: &mut Ui,
-) {
+fn display_settings(app: &mut App, res: &Resources, settings: &mut Settings, ui: &mut Ui) {
     let old_font_size = settings.zoom.font_size;
     ui.checkbox(&mut settings.smooth_animation, "Smooth animation");
     ui.horizontal(|ui| {
@@ -97,73 +87,71 @@ pub fn settings_menu(
     settings: &mut Settings,
     state: &mut SettingsState,
 ) -> bool {
-    let mut exit = false;
-    let mut back = false;
-    let mut output = plugins.egui(|ctx| match &mut state.menu {
-        SettingsMenu::Main => {
-            exit = settings_menu_main(settings, state, ctx);
+    let mut new_menu = None;
+    let mut output = plugins.egui(|ctx| {
+        new_menu = match state.menu {
+            SettingsMenu::Main => settings_menu_main(ctx),
+            SettingsMenu::Keys => Some(settings_menu_keys(settings, ctx)),
+            SettingsMenu::ChooseKey(a) => Some(settings_menu_choose_key(app, settings, ctx, a)),
+            SettingsMenu::Display => Some(settings_menu_display(app, res, settings, ctx)),
+            SettingsMenu::Help => Some(settings_menu_help(settings, ctx)),
         }
-        SettingsMenu::Keys => settings_menu_keys(settings, state, ctx),
-        SettingsMenu::ChooseKey(a) => {
-            back = settings_menu_choose_key(app, settings, ctx, a);
-        }
-        SettingsMenu::Display(window) => {
-            back = settings_menu_display(app, res, settings, window, ctx);
-        }
-        SettingsMenu::Help => settings_menu_help(settings, state, ctx),
     });
-    if back {
-        state.menu = SettingsMenu::Main;
-    }
     output.clear_color(Color::BLACK);
     gfx.render(&output);
-    if exit {
+    if let Some(m) = new_menu {
+        state.menu = m;
+        false
+    } else {
         save_or_log_err("settings", settings, "failed to save settings");
+        true
     }
-    exit
 }
 
-pub fn settings_menu_main(
-    settings: &mut Settings,
-    state: &mut SettingsState,
-    ctx: &Context,
-) -> bool {
+pub fn settings_menu_main(ctx: &Context) -> Option<SettingsMenu> {
+    let mut menu = Some(SettingsMenu::Main);
     central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Settings");
         ui.add_space(20.0);
         if ui.button(RichText::new("Display").heading()).clicked() {
-            state.menu = SettingsMenu::Display(settings.zoom.clone());
+            menu = Some(SettingsMenu::Display);
         }
         if ui.button(RichText::new("Keyboard").heading()).clicked() {
-            state.menu = SettingsMenu::Keys;
+            menu = Some(SettingsMenu::Keys);
         }
         if ui.button(RichText::new("Help").heading()).clicked() {
-            state.menu = SettingsMenu::Help;
+            menu = Some(SettingsMenu::Help);
         }
         ui.add_space(20.0);
-        ui.button(RichText::new("Close").heading()).clicked()
-    })
+        if ui.button(RichText::new("Close").heading()).clicked() {
+            menu = None;
+        }
+    });
+    menu
 }
 
 pub fn settings_menu_display(
     app: &mut App,
     res: &Resources,
     settings: &mut Settings,
-    temp_window: &mut ZoomSettings,
     ctx: &Context,
-) -> bool {
+) -> SettingsMenu {
     let r = central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Display settings");
         ui.add_space(20.0);
-        display_settings(app, res, settings, temp_window, ui);
+        display_settings(app, res, settings, ui);
         ui.add_space(20.0);
-        ui.button(RichText::new("Back").heading()).clicked()
+        if ui.button(RichText::new("Back").heading()).clicked() {
+            SettingsMenu::Main
+        } else {
+            SettingsMenu::Display
+        }
     });
     ctx.set_theme(settings.ui_theme);
     r
 }
 
-pub fn settings_menu_help(settings: &mut Settings, state: &mut SettingsState, ctx: &Context) {
+pub fn settings_menu_help(settings: &mut Settings, ctx: &Context) -> SettingsMenu {
     central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Help settings");
         ui.add_space(20.0);
@@ -171,19 +159,22 @@ pub fn settings_menu_help(settings: &mut Settings, state: &mut SettingsState, ct
         ui.checkbox(&mut settings.animate_tooltips, "Animated tooltips");
         ui.add_space(20.0);
         if ui.button(RichText::new("Back").heading()).clicked() {
-            state.menu = SettingsMenu::Main;
+            SettingsMenu::Main
+        } else {
+            SettingsMenu::Help
         }
-    });
+    })
 }
 
-pub fn settings_menu_keys(settings: &mut Settings, state: &mut SettingsState, ctx: &Context) {
+pub fn settings_menu_keys(settings: &mut Settings, ctx: &Context) -> SettingsMenu {
+    let mut menu = SettingsMenu::Keys;
     central_panel(ctx, egui::Align::Min, |ui| {
         ui.heading("Keyboard commands");
         Grid::new("key grid").show(ui, |ui| {
             for (n, (k, v)) in settings.keys.iter().enumerate() {
                 ui.label(k.name());
                 if ui.button(key_name(*v)).clicked() {
-                    state.menu = SettingsMenu::ChooseKey(*k);
+                    menu = SettingsMenu::ChooseKey(*k);
                 }
                 if n & 1 != 0 {
                     ui.end_row();
@@ -192,26 +183,29 @@ pub fn settings_menu_keys(settings: &mut Settings, state: &mut SettingsState, ct
         });
         ui.add_space(20.0);
         if ui.button(RichText::new("Back").heading()).clicked() {
-            state.menu = SettingsMenu::Main;
+            menu = SettingsMenu::Main;
         };
-    })
+    });
+    menu
 }
 
 pub fn settings_menu_choose_key(
     app: &App,
     settings: &mut Settings,
     ctx: &Context,
-    action: &Action,
-) -> bool {
-    let mut back = false;
-    egui::CentralPanel::default().show(ctx, |ui| {
-        ui.heading("Press any key");
-        if let Some(key) = app.keyboard.pressed.iter().next() {
-            settings.keys.insert(*action, *key);
-            back = true;
-        }
-    });
-    back
+    action: Action,
+) -> SettingsMenu {
+    egui::CentralPanel::default()
+        .show(ctx, |ui| {
+            ui.heading("Press any key");
+            if let Some(key) = app.keyboard.pressed.iter().next() {
+                settings.keys.insert(action, *key);
+                SettingsMenu::Keys
+            } else {
+                SettingsMenu::ChooseKey(action)
+            }
+        })
+        .inner
 }
 
 pub fn custom_spec_menu(
