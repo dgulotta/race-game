@@ -1,7 +1,4 @@
-use std::io::Cursor;
-
 use crate::{
-    course::bounding_rect,
     direction::Direction,
     input::Action,
     level::LevelData,
@@ -13,7 +10,6 @@ use notan::{
     app::{App, Graphics, Plugins},
     draw::CreateDraw,
     egui::{self, Button, Context, EguiPluginSugar, Rect, Slider, Ui},
-    math::{Affine2, Mat2, Vec2},
 };
 use strum::IntoEnumIterator;
 
@@ -22,6 +18,7 @@ use super::{
     graphics::{TILE_SIZE, TileGraphics, get_draw_offset},
     input::check_key_press,
     loader::Resources,
+    replay::make_animation_webp,
     settings::Settings,
 };
 
@@ -185,65 +182,12 @@ pub fn draw_goal_panel(
     });
 }
 
-fn gfx_size_for(tiles: isize, zoom: f32) -> u32 {
+pub(super) fn gfx_size_for(tiles: isize, zoom: f32) -> u32 {
     ((tiles as f32) * TILE_SIZE * zoom).round() as u32
 }
 
-fn anh(s: String) -> anyhow::Error {
-    anyhow::anyhow!("{}", s)
-}
-
-fn make_animation(
-    gfx: &mut Graphics,
-    res: &Resources,
-    state: &RaceState,
-    zoom: f32,
-    bg_color: &[f32; 3],
-) -> Result<Vec<u8>, anyhow::Error> {
-    let mut out = Cursor::new(Vec::new());
-    let course = state.sim.get_course();
-    let (xrange, yrange) = bounding_rect(course.keys());
-    let tile_size_zoom = TILE_SIZE * zoom;
-    let width = gfx_size_for(xrange.end() - xrange.start() + 1, zoom);
-    let height = gfx_size_for(yrange.end() - yrange.start() + 1, zoom);
-    let texture = gfx
-        .create_render_texture(width, height)
-        .build()
-        .map_err(anh)?;
-    let mut pix = vec![0; 4 * (width as usize) * (height as usize)];
-    let mut encoder = png::Encoder::new(&mut out, width, height);
-    encoder.set_color(png::ColorType::Rgba);
-    encoder
-        .set_animated(state.tracker.rounds_available() as u32, 0)
-        .unwrap();
-    let mut writer = encoder.write_header().unwrap();
-    writer.set_frame_delay(1, 2).unwrap();
-    let xoff = (*xrange.start() as f32) * tile_size_zoom;
-    let yoff = ((*yrange.end() + 1) as f32) * tile_size_zoom;
-    let aff = Affine2::from_mat2_translation(
-        Mat2::from_diagonal(Vec2::new(1.0, -1.0)),
-        Vec2::new(-xoff, yoff),
-    );
-    for round in 0..state.tracker.rounds_available() {
-        let mut graphics = TileGraphics {
-            res,
-            zoom,
-            bg_color,
-            draw: texture.create_draw(),
-            round,
-        };
-        graphics.draw.transform().push(aff.into());
-        graphics.draw_course(course);
-        for car in &state.tracker.get_cars()[round] {
-            graphics.draw_car(car);
-            graphics.draw_car_number(car);
-        }
-        gfx.render_to(&texture, &graphics.draw);
-        gfx.read_pixels(&texture).read_to(&mut pix).map_err(anh)?;
-        writer.write_image_data(&pix).unwrap();
-    }
-    writer.finish().unwrap();
-    Ok(out.into_inner())
+pub(super) fn anh(s: String) -> anyhow::Error {
+    anyhow::anyhow!("{s}")
 }
 
 pub fn show_success(
@@ -272,13 +216,15 @@ pub fn show_success(
                 }
                 if ui.button("Save replay").clicked() {
                     let zoom = (app.window().dpi() as f32) * settings.zoom.tile_size;
-                    if let Ok(bytes) = make_animation(gfx, res, state, zoom, &settings.bg_color) {
+                    if let Ok(bytes) =
+                        make_animation_webp(gfx, res, state, zoom, &settings.bg_color)
+                    {
                         let _ = state.exporter.set_save_action(
                             Box::new(move |w| {
                                 w.write_all(&bytes)?;
                                 Ok(())
                             }),
-                            "race.png",
+                            "race.webp",
                         );
                     }
                 }

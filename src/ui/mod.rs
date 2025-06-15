@@ -8,5 +8,6 @@ pub mod input;
 pub mod loader;
 pub mod menu;
 pub mod race;
+pub mod replay;
 pub mod screen;
 pub mod settings;

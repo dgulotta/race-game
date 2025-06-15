@@ -1164,6 +1164,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "image-webp"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "14d75c7014ddab93c232bc6bb9f64790d3dfd1d605199acd4b40b6d69e691e9f"
+dependencies = [
+ "byteorder-lite",
+ "quick-error",
+]
+
+[[package]]
 name = "indexmap"
 version = "2.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2220,6 +2230,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "afbdc74edc00b6f6a218ca6a5364d6226a259d4b8ea1af4a0ea063f27e179f4d"
 
 [[package]]
+name = "quick-error"
+version = "2.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a993555f31e5a609f617c12db6250dedcac1b0a85076912c436e6fc9b2c8e6a3"
+
+[[package]]
 name = "quick-xml"
 version = "0.37.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2248,10 +2264,10 @@ dependencies = [
  "egui-file-dialog",
  "enum-map",
  "hashbrown",
+ "image-webp",
  "indexmap",
  "js-sys",
  "notan",
- "png",
  "regex",
  "rmp-serde",
  "rpds",
@@ -2262,6 +2278,7 @@ dependencies = [
  "toml",
  "wasm-bindgen",
  "web-sys",
+ "webp-animator",
 ]
 
 [[package]]
@@ -3164,6 +3181,11 @@ dependencies = [
  "js-sys",
  "wasm-bindgen",
 ]
+
+[[package]]
+name = "webp-animator"
+version = "0.1.0"
+source = "git+https://github.com/dgulotta/webp-animator.git#247071d8594559829b3f0829d73db2b844622a4b"
 
 [[package]]
 name = "winapi-util"

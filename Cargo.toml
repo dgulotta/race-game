@@ -16,7 +16,9 @@ rpds = { version = "1.1.0", features = ["serde"] }
 hashbrown = "0.15.2"
 archery = "1.1.0"
 egui-file-dialog = "0.9"
-png = "0.17.16"
+#png = "0.17.16"
+image-webp = "0.2.2"
+webp-animator = { git = "https://github.com/dgulotta/webp-animator.git" }
 anyhow = "1.0.95"
 indexmap = { version = "2.7.1", features = ["serde"] }
 serde_default = "0.2.0"
