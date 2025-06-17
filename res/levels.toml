@@ -63,20 +63,15 @@ finish = [7]
 
 [[levels]]
 name = "Level 10"
-cars = 8
-finish = [7, 6, 5, 4, 3, 2, 1, 0]
-
-[[levels]]
-name = "Level 11"
 cars = 16
 finish = [0, 1, 2, 3, 8, 9, 10, 11]
 
 [[levels]]
-name = "Level 12"
+name = "Level 11"
 cars = 24
 finish = [2, 8, 14, 20]
 
 [[levels]]
-name = "Level 13"
-cars = 12
-finish = [0, 3, 6, 9]
+name = "Level 12"
+cars = 8
+finish = [7, 6, 5, 4, 3, 2, 1, 0]
