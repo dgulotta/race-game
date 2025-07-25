@@ -3,7 +3,6 @@ use crate::{direction::Direction, input::Action, tile::TileType};
 use indexmap::IndexMap;
 use notan::{egui, prelude::KeyCode};
 use serde::{Deserialize, Deserializer, Serialize};
-use serde_default::DefaultFromSerde;
 use strum::IntoEnumIterator;
 
 use super::graphics::TILE_SIZE;
@@ -70,52 +69,51 @@ fn deserialize_keys<'de, D: Deserializer<'de>>(deserializer: D) -> Result<KeySet
     Ok(settings)
 }
 
-const fn one() -> f32 {
-    1.0
-}
-const fn true_fn() -> bool {
-    true
-}
-
-const fn default_theme() -> egui::ThemePreference {
-    egui::ThemePreference::System
-}
-
-const fn default_bg_color() -> [f32; 3] {
-    [1.0, 1.0, 1.0]
-}
-
-#[derive(Clone, Serialize, Deserialize, DefaultFromSerde)]
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(default = "ZoomSettings::default")]
 pub struct ZoomSettings {
-    #[serde(default = "one")]
     pub tile_size: f32,
-    #[serde(default = "one")]
     pub font_size: f32,
 }
 
-#[derive(Clone, Serialize, Deserialize, DefaultFromSerde)]
+impl Default for ZoomSettings {
+    fn default() -> Self {
+        Self {
+            tile_size: 1.0,
+            font_size: 1.0,
+        }
+    }
+}
+
+#[derive(Clone, Serialize, Deserialize)]
+#[serde(default = "Settings::default")]
 pub struct Settings {
-    #[serde(
-        default = "default_key_settings",
-        deserialize_with = "deserialize_keys"
-    )]
+    #[serde(deserialize_with = "deserialize_keys")]
     pub keys: KeySettings,
-    #[serde(default = "true_fn")]
     pub animate_tooltips: bool,
-    #[serde(default = "true_fn")]
     pub tutorial: bool,
-    #[serde(default = "true_fn")]
     pub smooth_animation: bool,
-    #[serde(default)]
     pub zoom: ZoomSettings,
-    #[serde(default = "default_theme")]
     pub ui_theme: egui::ThemePreference,
-    #[serde(default = "default_bg_color")]
     pub bg_color: [f32; 3],
 }
 
 impl Settings {
     pub fn tile_size(&self) -> f32 {
         TILE_SIZE * self.zoom.tile_size
+    }
+}
+
+impl Default for Settings {
+    fn default() -> Self {
+        Settings {
+            keys: default_key_settings(),
+            animate_tooltips: true,
+            tutorial: true,
+            smooth_animation: true,
+            zoom: Default::default(),
+            ui_theme: egui::ThemePreference::System,
+            bg_color: [1.0, 1.0, 1.0],
+        }
     }
 }
