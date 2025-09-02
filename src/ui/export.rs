@@ -112,12 +112,11 @@ mod native {
         }
 
         fn update(&mut self, ctx: &Context) -> Result<(), anyhow::Error> {
-            if let Some(path) = self.dialog.update(ctx).picked() {
-                if let Some(save) = self.save.take() {
+            if let Some(path) = self.dialog.update(ctx).picked()
+                && let Some(save) = self.save.take() {
                     let mut save_file = BufWriter::new(File::create(path)?);
                     save(&mut save_file)?;
                 }
-            }
             Ok(())
         }
     }

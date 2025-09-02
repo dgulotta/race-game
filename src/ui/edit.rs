@@ -473,13 +473,12 @@ pub fn draw_edit(
         if let Some(cdd) = &state.copy_dialog_data {
             match draw_copy_dialog(ctx, cdd, &res.levels) {
                 DialogResponse::Accepted(lev) => {
-                    if let Some(course) = load_course(lev) {
-                        if !course.is_empty() {
+                    if let Some(course) = load_course(lev)
+                        && !course.is_empty() {
                             state.track_selection =
                                 TrackSelection::Modify(SelectState::load_external(course));
                             state.copy_dialog_data = None;
                         }
-                    }
                 }
                 DialogResponse::Rejected => state.copy_dialog_data = None,
                 _ => (),

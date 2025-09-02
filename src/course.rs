@@ -212,7 +212,7 @@ impl CourseEdit {
     pub fn get(&self, c: TileCoord) -> Option<&Tile> {
         self.get_course().get(&c)
     }
-    pub fn edit(&mut self) -> Transaction {
+    pub fn edit(&mut self) -> Transaction<'_> {
         Transaction::new(self)
     }
     pub fn set_single(&mut self, pos: TileCoord, tile: Tile) {
