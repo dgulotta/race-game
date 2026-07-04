@@ -1,77 +1,77 @@
 [[levels]]
-name = "Level 0"
+name = "Tutorial: none finish"
 cars = 10
 finish = []
 tutorial = 0
 banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightIntersection"]
 
 [[levels]]
-name = "Level 1"
+name = "Tutorial: all finish"
 cars = 10
 finish = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
 tutorial = 1
 banned = ["LightTurns","LightForwardTurn","Merge","YieldIntersection","LightIntersection"]
 
 [[levels]]
-name = "Level 2"
+name = "Evens"
 cars = 10
 finish = [0, 2, 4, 6, 8]
 tutorial = 2
 banned = ["Merge","YieldIntersection","LightIntersection"]
 
 [[levels]]
-name = "Level 3"
+name = "Offset"
 cars = 10
 finish = [1, 0, 3, 2, 5, 4, 7, 6, 9, 8]
 tutorial = 3
 banned = ["YieldIntersection","LightIntersection"]
 
 [[levels]]
-name = "Level 4"
+name = "No end"
 cars = 12
 finish = [0, 2, 4, 6]
 tutorial = 4
 banned = ["LightIntersection"]
 
 [[levels]]
-name = "Level 5"
+name = "Last two"
 cars = 10
 finish = [8, 9]
 tutorial = 3
 tiles = [0, 1, 2, 3, 4]
 
 [[levels]]
-name = "Level 6"
+name = "Unyielding"
 cars = 10
 finish = [0, 1, 2, 3, 4, 5, 6, 7]
 banned = ["YieldIntersection"]
 
 [[levels]]
-name = "Level 7"
+name = "Extra"
 cars = 8
 finish = [0, 1, 3, 5, 7]
 
 [[levels]]
-name = "Level 8"
+name = "Tail"
 cars = 8
 finish = [1, 2, 3, 4, 5, 6, 7]
 
 [[levels]]
-name = "Level 9"
+name = "Last"
 cars = 8
 finish = [7]
 
 [[levels]]
-name = "Level 10"
+name = "Groups of four"
 cars = 16
 finish = [0, 1, 2, 3, 8, 9, 10, 11]
 
 [[levels]]
-name = "Level 11"
+name = "Period six"
 cars = 24
 finish = [2, 8, 14, 20]
 
 [[levels]]
-name = "Level 12"
+name = "Reverse"
 cars = 8
 finish = [7, 6, 5, 4, 3, 2, 1, 0]
